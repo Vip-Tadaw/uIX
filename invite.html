@@ -334,7 +334,7 @@
         function renderInviteData(inviteCode) {
             // سحب رابط الدومين الحالي بشكل ديناميكي كامل
             let currentDomain = window.location.origin;
-            let baseRegisterUrl = `${currentDomain}/index.html?invite=${inviteCode}`;
+            let baseRegisterUrl = `${currentDomain}/uIX/index.html?invite=${inviteCode}`;
 
             document.getElementById('code-text').innerText = inviteCode;
             document.getElementById('link-text').innerText = baseRegisterUrl;
