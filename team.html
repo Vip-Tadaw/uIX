@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tadawulx - فريق</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000; color: #ffffff; display: flex; justify-content: center;
+            min-height: 100vh; user-select: none;
+        }
+
+        .app-container { width: 100%; max-width: 400px; background-color: #000000; position: relative; display: flex; flex-direction: column; padding-bottom: 30px; }
+
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #1e2329; }
+        .top-header i { cursor: pointer; font-size: 18px; }
+        .header-avatar img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+
+        .stats-card { background-color: #141517; border: 1px solid #1e2329; border-radius: 15px; margin: 15px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .stat-box { text-align: right; }
+        .stat-title { color: #848e9c; font-size: 11px; margin-bottom: 5px; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #ffffff; }
+
+        .tabs-container { background-color: #141517; border: 1px solid #1e2329; border-radius: 25px; margin: 0 15px; display: flex; padding: 4px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 22px; background: none; color: #848e9c; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .tab-btn.active { background-color: #fcd535; color: #000000; }
+
+        .section-sub-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px; }
+        .section-title { font-size: 15px; font-weight: bold; }
+        
+        .level-dropdown { background-color: #141517; color: #fcd535; border: 1px solid #2b3139; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; outline: none; cursor: pointer; }
+
+        .table-header { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; background-color: #141517; padding: 12px 15px; margin: 0 15px 10px; border-radius: 8px; font-size: 12px; color: #848e9c; text-align: center; }
+
+        .members-list { display: none; padding: 0 15px; flex-direction: column; gap: 8px; }
+        .member-row { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; background-color: #141517; border: 1px solid #1e2329; padding: 14px 10px; border-radius: 10px; font-size: 12px; text-align: center; align-items: center; transition: transform 0.2s; }
+        .member-row:active { transform: scale(0.98); }
+        
+        .member-id { color: #ffffff; font-weight: bold; font-size: 13px; cursor: pointer; display: inline-block; padding: 2px 5px; border-radius: 4px; transition: background 0.2s; }
+        .member-id:active { background-color: rgba(252, 213, 53, 0.2); color: #fcd535; }
+        .member-id i { font-size: 10px; margin-right: 4px; color: #848e9c; }
+
+        .member-sub-info { color: #848e9c; font-size: 10px; margin-top: 2px; display: block; }
+        .member-amount { color: #0ecb81; font-weight: bold; }
+        .member-date { color: #848e9c; }
+
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; color: #848e9c; font-size: 14px; }
+        .empty-box { position: relative; width: 100px; height: 100px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
+        .empty-box img { width: 70px; opacity: 0.5; }
+
+        /* إشعار النسخ المنبثق (Toast) */
+        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0ecb81; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 2000; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="top-header">
+            <i class="fa-solid fa-chevron-right" onclick="history.back()"></i>
+            <span>فريق</span>
+            <div class="header-avatar">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140047.png" alt="User">
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <div class="stat-box">
+                <div class="stat-title">(USDT) أرباح اليوم</div>
+                <div class="stat-value" id="today-rewards">0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">(USDT) إجمالي الإيرادات</div>
+                <div class="stat-value" id="total-revenue">0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">تسجيل جديد اليوم</div>
+                <div class="stat-value" id="today-signups">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">مجموع الناس</div>
+                <div class="stat-value" id="total-people">0</div>
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-btn" id="tab-contribution" onclick="switchTab('contribution')">مساهمة الفريق</button>
+            <button class="tab-btn active" id="tab-members" onclick="switchTab('members')">أعضاء الفريق</button>
+        </div>
+
+        <div class="section-sub-header">
+            <span class="section-title" id="section-dynamic-title">تسجيل جديد اليوم 0</span>
+            <select class="level-dropdown" id="level-select" onchange="filterAndRender()">
+                <option value="all">كل الأعضاء</option>
+                <option value="vip">أعضاء VIP فقط</option>
+                <option value="normal">المستخدمين العاديين</option>
+            </select>
+        </div>
+
+        <div class="table-header" id="table-header-titles">
+            <span>وقت التسجيل</span>
+            <span>درجة</span>
+            <span>حساب</span>
+        </div>
+
+        <div class="members-list" id="list-container"></div>
+
+        <div class="empty-state" id="empty-view">
+            <div class="empty-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Empty Box">
+            </div>
+            <span>فارغ</span>
+        </div>
+
+    </div>
+
+    <div class="toast" id="copy-toast"><i class="fa-solid fa-check"></i> تم نسخ الـ ID بنجاح!</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCa3nVSth5Jhhuhvblw23w0uxzR1VJHLOo",
+            authDomain: "yaqoout-b4c83.firebaseapp.com",
+            projectId: "yaqoout-b4c83",
+            storageBucket: "yaqoout-b4c83.firebasestorage.app",
+            messagingSenderId: "21558070357",
+            appId: "1:21558070357:web:6237dcf59b162b5dae18dc"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentTab = 'members';
+        let rawTeamMembers = [];
+
+        // دالة نسخ الـ ID الذكية
+        window.copyMemberId = function(id) {
+            navigator.clipboard.writeText(id).then(() => {
+                let toast = document.getElementById('copy-toast');
+                toast.classList.add('show');
+                setTimeout(() => { toast.classList.remove('show'); }, 2000);
+            });
+        };
+
+        // التبديل بين تبويبات العرض وتغيير الهيدر
+        window.switchTab = function(type) {
+            currentTab = type;
+            let contribBtn = document.getElementById('tab-contribution');
+            let membersBtn = document.getElementById('tab-members');
+            let tableHeader = document.getElementById('table-header-titles');
+            
+            if (type === 'contribution') {
+                contribBtn.classList.add('active');
+                membersBtn.classList.remove('active');
+                tableHeader.innerHTML = `<span>حساب</span><span>النوع المالي</span><span>سجل الوقت</span><span>دخل</span>`;
+                tableHeader.style.gridTemplateColumns = "1.2fr 1fr 1fr 0.8fr";
+            } else {
+                membersBtn.classList.add('active');
+                contribBtn.classList.remove('active');
+                tableHeader.innerHTML = `<span>وقت التسجيل</span><span>درجة</span><span>حساب</span>`;
+                tableHeader.style.gridTemplateColumns = "1.2fr 1fr 1.2fr";
+            }
+            
+            filterAndRender();
+        };
+
+        // دالة رندرة وتصفية بيانات الفريق جوه الجدول
+        window.filterAndRender = function() {
+            const listContainer = document.getElementById('list-container');
+            const emptyView = document.getElementById('empty-view');
+            const filterValue = document.getElementById('level-select').value;
+            
+            let filteredData = rawTeamMembers; 
+            if (filterValue === 'vip') {
+                filteredData = rawTeamMembers.filter(m => m.activeVipId && m.activeVipId > 0);
+            } else if (filterValue === 'normal') {
+                filteredData = rawTeamMembers.filter(m => !m.activeVipId || m.activeVipId === 0);
+            }
+
+            if (filteredData.length === 0) {
+                listContainer.style.display = 'none';
+                emptyView.style.display = 'flex';
+                return;
+            }
+
+            emptyView.style.display = 'none';
+            listContainer.style.display = 'flex';
+            listContainer.innerHTML = "";
+
+            filteredData.forEach((member) => {
+                let row = document.createElement('div');
+                row.className = 'member-row';
+
+                let regDateStr = 'غير متوفر';
+                if (member.createdAt) {
+                    const dateObj = new Date(member.createdAt.seconds * 1000);
+                    regDateStr = dateObj.toLocaleDateString('ar-EG');
+                }
+
+                const activeVip = member.activeVipId;
+                const degreeHtml = (activeVip && activeVip > 0)
+                    ? `<span style="color:#0ecb81; font-weight:bold; background:#0ecb8122; padding:3px 8px; border-radius:4px; font-size:11px;"><i class="fa-solid fa-crown" style="font-size:9px; margin-left:3px;"></i> VIP ${activeVip}</span>`
+                    : `<span style="color:#848e9c; font-size:11px;">مستخدم عادي</span>`;
+
+                const phoneStr = member.phone || "---";
+                const maskedPhone = phoneStr.length >= 10 ? phoneStr.substring(0, 4) + "***" + phoneStr.substring(phoneStr.length - 3) : phoneStr;
+                const realId = member.userId || member.myInviteCode || "لا يوجد ID";
+
+                if (currentTab === 'members') {
+                    row.style.gridTemplateColumns = "1.2fr 1fr 1.2fr";
+                    row.innerHTML = `
+                        <span class="member-date">${regDateStr}</span>
+                        <span class="member-amount">${degreeHtml}</span>
+                        <div style="text-align: center;">
+                            <span class="member-id" onclick="copyMemberId('${realId}')" title="اضغط للنسخ" style="direction: ltr;">${realId} <i class="fa-regular fa-copy"></i></span>
+                            <span class="member-sub-info" style="direction: ltr;">${maskedPhone}</span>
+                        </div>
+                    `;
+                } else if (currentTab === 'contribution') {
+                    row.style.gridTemplateColumns = "1.2fr 1fr 1fr 0.8fr";
+                    const contributionAmount = parseFloat(member.myContribution || 0).toFixed(2);
+                    const financialType = (activeVip && activeVip > 0) ? "عمولة ترقية" : "أرباح كمية";
+
+                    row.innerHTML = `
+                        <div style="text-align: center;">
+                            <span class="member-id" onclick="copyMemberId('${realId}')" style="direction: ltr; font-size:11px;">${realId} <i class="fa-regular fa-copy"></i></span>
+                        </div>
+                        <span style="color: #fcd535; font-size:11px;">${financialType}</span>
+                        <span class="member-date" style="font-size:11px;">${regDateStr}</span>
+                        <span class="member-amount" style="color:#0ecb81; direction:ltr;">+${contributionAmount}</span>
+                    `;
+                }
+
+                listContainer.appendChild(row);
+            });
+        };
+
+        // مراقبة تسجيل دخول الداعي وجلب البيانات الحية
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // 1. جلب إجمالي الإيرادات الحقيقي للمستخدم + تحديث صورة البروفايل
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const myData = docSnap.data();
+                        
+                        // تحديث إجمالي الإيرادات
+                        const totalRewards = parseFloat(myData.totalTeamRewards || 0).toFixed(2);
+                        document.getElementById('total-revenue').innerText = totalRewards;
+                        
+                        // تحديث الصورة الشخصية ديناميكياً إذا متوفرة بالـ DB
+                        if (myData.photoURL) {
+                            document.querySelector('.header-avatar img').src = myData.photoURL;
+                        }
+                    }
+                });
+
+                // 2. الاستماع اللحظي وحساب أرباح اليوم فقط من بداية اليوم (الساعة 12:00 صباحاً)
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+
+                const todayRewardsQuery = query(
+                    collection(db, "transactions"), 
+                    where("userId", "==", user.uid),
+                    where("type", "==", "team_reward"), 
+                    where("createdAt", ">=", startOfDay)
+                );
+
+                onSnapshot(todayRewardsQuery, (snapshot) => {
+                    let todaySum = 0;
+                    snapshot.forEach(doc => {
+                        todaySum += parseFloat(doc.data().amount || 0);
+                    });
+                    document.getElementById('today-rewards').innerText = todaySum.toFixed(2);
+                });
+
+                // 3. جلب وتحديث قائمة أعضاء فريق الداعي حياً وبشكل مستمر
+                const teamQuery = query(collection(db, "users"), where("referredByUid", "==", user.uid));
+                onSnapshot(teamQuery, (snapshot) => {
+                    rawTeamMembers = [];
+                    let todaySignupsCount = 0;
+                    const today = new Date().toLocaleDateString('ar-EG');
+
+                    document.getElementById('total-people').innerText = snapshot.size;
+
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        rawTeamMembers.push(data);
+                        
+                        if (data.createdAt) {
+                            const dateObj = new Date(data.createdAt.seconds * 1000);
+                            if (dateObj.toLocaleDateString('ar-EG') === today) {
+                                todaySignupsCount++;
+                            }
+                        }
+                    });
+
+                    document.getElementById('today-signups').innerText = todaySignupsCount;
+                    document.getElementById('section-dynamic-title').innerText = `تسجيل جديد اليوم ${todaySignupsCount}`;
+                    
+                    filterAndRender();
+                });
+
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+    </script>
+</body>
+</html>
+
