@@ -150,8 +150,31 @@
         .share-btn.whatsapp { color: #25D366; }
         .share-btn.telegram { color: #0088cc; }
         
-        .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #02c076; color: #fff; padding: 12px 25px; border-radius: 20px; font-size: 13px; font-weight: bold; z-index: 2000; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .toast.show { transform: translateX(-50%) translateY(0); }
+       /* ✅ الكود الجديد المعدل لإخفاء الإشعار تلقائياً */
+.toast { 
+    position: fixed; 
+    bottom: 80px; 
+    left: 50%; 
+    transform: translateX(-50%) translateY(120px); /* نزلناه زايد حتى يختفي تماماً تحت الشاشة */
+    background: #02c076; 
+    color: #fff; 
+    padding: 12px 25px; 
+    border-radius: 20px; 
+    font-size: 13px; 
+    font-weight: bold; 
+    z-index: 2000; 
+    opacity: 0; /* يكون مخفي تماماً بالبداية */
+    visibility: hidden; /* يمنع الضغط عليه وهو مخفي */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, visibility 0.3s; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+}
+
+/* التنسيق أثناء ظهور الإشعار */
+.toast.show { 
+    transform: translateX(-50%) translateY(0); 
+    opacity: 1; 
+    visibility: visible;
+}
 
         /* القائمة السفلية */
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; display: flex; justify-content: space-around; padding: 10px 0 15px; border-top: 1px solid #2b3139; z-index: 100; direction: ltr; }
