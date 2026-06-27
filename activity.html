@@ -65,7 +65,7 @@
         </div>
     </div>
 
-   <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -86,6 +86,7 @@
         let allUserActivities = []; 
         let depositsLoaded = false;
         let withdrawsLoaded = false;
+        let transactionsLoaded = false; // ضفنا متغير جديد للعمليات
 
         // دالة عرض وتحديث الواجهة
         function renderActivities() {
@@ -118,19 +119,22 @@
                 let badgeClass = "status-pending";
                 
                 if (item.status === 'approved') {
-                    // تمييز مظهر المكافأة الإدارية والخصم الإداري بأيقونات وألوان خاصة
                     if (item.subType === 'admin_gift') {
-                        iconClass = "fa-solid fa-gift";       // أيقونة هدية
-                        iconColor = "#fcd535";                 // لون ذهبي مميز
+                        iconClass = "fa-solid fa-gift";
+                        iconColor = "#fcd535";
                         iconBg = "rgba(252, 213, 53, 0.15)";
                         badgeClass = "status-success";
                     } else if (item.subType === 'admin_deduction') {
-                        iconClass = "fa-solid fa-triangle-exclamation"; // أيقونة تحذير للخصم
-                        iconColor = "#f6465d";                         // لون أحمر
+                        iconClass = "fa-solid fa-triangle-exclamation";
+                        iconColor = "#f6465d";
                         iconBg = "rgba(246, 70, 93, 0.15)";
                         badgeClass = "status-rejected";
+                    } else if (item.type === 'team_reward') {
+                        iconClass = "fa-solid fa-users"; // أيقونة خاصة بأرباح الفريق
+                        iconColor = "#00f646";
+                        iconBg = "rgba(0, 246, 70, 0.15)";
+                        badgeClass = "status-success";
                     } else {
-                        // المظهر الافتراضي للإيداع والسحب العادي المقبول
                         iconClass = item.type === 'deposit' ? "fa-solid fa-wallet" : "fa-solid fa-money-bill-transfer";
                         iconColor = "#0ecb81";
                         iconBg = "rgba(14, 203, 129, 0.1)";
@@ -185,7 +189,6 @@
                         let msgText = `جاري مراجعة طلب إيداعك بقيمة ${data.amount} USDT من قبل النظام.`;
                         
                         if(data.status === 'approved') {
-                            // فحص هل العملية مكافأة إدارية أم إيداع عادي
                             if (data.type === 'admin_gift') {
                                 titleText = "مكافأة من الإدارة 🎁"; 
                                 statusTxt = "مكتمل";
@@ -203,7 +206,7 @@
                         allUserActivities.push({
                             id: docSnap.id,
                             type: 'deposit',
-                            subType: data.type || '', // حفظ النوع الفرعي للتمييز في التصميم
+                            subType: data.type || '',
                             amount: data.amount,
                             status: data.status,
                             title: titleText,
@@ -214,7 +217,7 @@
                         });
                     });
                     depositsLoaded = true;
-                    if(withdrawsLoaded) renderActivities();
+                    if(withdrawsLoaded && transactionsLoaded) renderActivities();
                 });
 
                 // 2. جلب السحوبات
@@ -231,7 +234,6 @@
                         let msgText = `جاري مراجعة طلب السحب الخاص بك بقيمة ${data.amount} USDT.`;
                         
                         if(data.status === 'approved') {
-                            // فحص هل العملية خصم إداري أم سحب عادي
                             if (data.type === 'admin_deduction') {
                                 titleText = "خصم إداري ⚠️"; 
                                 statusTxt = "مكتمل";
@@ -249,7 +251,7 @@
                         allUserActivities.push({
                             id: docSnap.id,
                             type: 'withdraw',
-                            subType: data.type || '', // حفظ النوع الفرعي للتمييز في التصميم
+                            subType: data.type || '',
                             amount: data.amount,
                             status: data.status,
                             title: titleText,
@@ -260,7 +262,33 @@
                         });
                     });
                     withdrawsLoaded = true;
-                    if(depositsLoaded) renderActivities();
+                    if(depositsLoaded && transactionsLoaded) renderActivities();
+                });
+
+                // 3. جلب أرباح الفريق والمكافآت (الإضافة الجديدة)
+                const qTrans = query(collection(db, "transactions"), where("userId", "==", user.uid));
+                onSnapshot(qTrans, (snapshot) => {
+                    allUserActivities = allUserActivities.filter(a => a.type !== 'team_reward');
+                    
+                    snapshot.forEach((docSnap) => {
+                        let data = docSnap.data();
+                        let timeObj = data.createdAt ? new Date(data.createdAt.seconds * 1000) : new Date();
+                        
+                        allUserActivities.push({
+                            id: docSnap.id,
+                            type: 'team_reward',
+                            subType: data.type || '',
+                            amount: data.amount,
+                            status: 'approved', // دائماً مكتملة
+                            title: "مكافأة فريق 💸",
+                            statusText: "مكتمل",
+                            message: data.description || `حصلت على عمولة بقيمة ${data.amount} USDT.`,
+                            sortTime: timeObj.getTime(),
+                            displayTime: timeObj.toLocaleString('ar-EG', {hour12: true, hour: '2-digit', minute:'2-digit', year:'numeric', month:'2-digit', day:'2-digit'})
+                        });
+                    });
+                    transactionsLoaded = true;
+                    if(depositsLoaded && withdrawsLoaded) renderActivities();
                 });
 
             } else {
@@ -269,6 +297,8 @@
             }
         });
 </script>
+
+
 
 
 </body>
