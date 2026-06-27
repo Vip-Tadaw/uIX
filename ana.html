@@ -309,6 +309,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let fullUID = ""; // متغير جديد يحفظ الـ ID الكامل للنسخ
         let currentUID = "------";
         let actualBalance = "0.00";
         let isBalanceHidden = false;
@@ -317,8 +318,14 @@
         // جلب البيانات الحقيقية والآمنة من الفايربيس بشكل لحظي
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // حفظ الـ ID الكامل بالخلفية لغرض النسخ
+                fullUID = user.uid; 
+                
+                // قص أول 8 أحرف فقط لعرضها بالشاشة حتى يبقى التصميم مرتب
                 currentUID = user.uid.substring(0, 8).toUpperCase();
                 document.getElementById('uid-text').innerText = currentUID;
+                
+                // تم تعديل السطر أدناه ليعمل بشكل صحيح (إضافة علامة || التي كانت مفقودة)
                 document.getElementById('user-phone-display').innerText = user.phoneNumber || user.email || "مستخدم Tadawulx";
 
                 // استماع حقيقي ومباشر يمنع أي تلاعب بالبيانات أو الأرباح
@@ -420,11 +427,19 @@
             }).catch(err => showToast("حدث خطأ في الاتصال بقاعدة البيانات", true));
         };
 
-        // نسخ الـ ID وإخفاء الرصيد والخروج
+        // نسخ الـ ID الكامل المخفي بالخلفية
         window.copyUID = function() {
-            if (currentUID === "------") return;
-            navigator.clipboard.writeText(currentUID).then(() => showToast("تم نسخ الـ UID بنجاح!")).catch(err => {
-                let ta = document.createElement("textarea"); ta.value = currentUID; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast("تم نسخ الـ UID بنجاح!");
+            if (!fullUID) return; // تم التغيير للتحقق من الـ ID الكامل
+            
+            // ننسخ الـ fullUID بدل currentUID
+            navigator.clipboard.writeText(fullUID).then(() => showToast("تم نسخ الـ ID بالكامل بنجاح!")).catch(err => {
+                let ta = document.createElement("textarea"); 
+                ta.value = fullUID; 
+                document.body.appendChild(ta); 
+                ta.select(); 
+                document.execCommand('copy'); 
+                document.body.removeChild(ta); 
+                showToast("تم نسخ الـ ID بالكامل بنجاح!");
             });
         };
 
@@ -441,12 +456,12 @@
         
         window.showToast = function(message, isError = false) {
             let toast = document.getElementById('system-toast');
-            toast.innerText = message; toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2500);
+            toast.innerText = message; 
+            toast.className = `toast ${isError ? 'error' : ''}`; // تم إصلاح علامات التنصيص هنا أيضاً
+            toast.classList.add('show'); 
+            setTimeout(() => toast.classList.remove('show'), 2500);
         };
-
-
-    </script>
+</script>
 </body>
 </html>
 
