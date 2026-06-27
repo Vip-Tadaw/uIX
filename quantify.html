@@ -313,19 +313,30 @@ async function distributeTeamRewards(userData, profit) {
         { uid: userData.level6, percent: 0.01 }  // المستوى 6 (1%)
     ];
 
-    levels.forEach(async (level) => {
+    levels.forEach(async (level, index) => {
         if (level.uid && level.uid !== "" && level.uid !== "SYSTEM_MASTER") {
             let reward = profit * level.percent;
             if (reward > 0) {
                 try {
                     const levelRef = doc(db, "users", level.uid);
+                    // 1. تحديث رصيد حساب الداعي
                     await updateDoc(levelRef, {
                         balance: increment(reward),
                         teamRevenue: increment(reward),
                         totalTeamRewards: increment(reward)
                     });
+
+                    // 2. إضافة الإشعار الثابت بمركز النشاط (سجل العمليات)
+                    await addDoc(collection(db, "transactions"), {
+                        userId: level.uid,
+                        amount: reward,
+                        type: "team_reward",
+                        description: أرباح كمية - الفريق مستوى ${index + 1},
+                        createdAt: new Date()
+                    });
+
                 } catch (e) {
-                    console.log("خطأ بتوزيع العمولة:", e);
+                    console.log("خطأ بتوزيع العمولة أو تسجيل النشاط:", e);
                 }
             }
         }
@@ -430,7 +441,7 @@ async function distributeTeamRewards(userData, profit) {
             }, 1000);
         };
 
-        // 💰 دالة شراء الـ VIP المحدثة بنظام مكافآت الإحالة (5%)
+      // 💰 دالة شراء الـ VIP المحدثة بنظام مكافآت الإحالة (5%) مع تسجيل النشاط الثابت
         window.buyVipLevel = async function(id, price) {
             if (!currentUser) return;
             try {
@@ -445,7 +456,7 @@ async function distributeTeamRewards(userData, profit) {
                     let currentBal = parseFloat(data.balance || 0);
 
                     if (currentBal < price) {
-                        throw `رصيدك الفعلي غير كافٍ للترقية! تحتاج $${price}`;
+                        throw` رصيدك الفعلي غير كافٍ للترقية! تحتاج $${price}`;
                     }
 
                     // البحث عن الداعي (القراءة الثانية)
@@ -467,11 +478,11 @@ async function distributeTeamRewards(userData, profit) {
                         lastCompletionTime: null
                     });
 
-                    // 2. منح 5% للداعي (إن وجد)
+                    // 2. منح 5% للداعي وتسجيلها بمركز النشاط
                     if (inviterDoc && inviterDoc.exists()) {
                         let inviterData = inviterDoc.data();
                         let inviterBal = parseFloat(inviterData.balance || 0);
-                        let inviterTeamRev = parseFloat(inviterData.totalTeamRewards || inviterData.teamRevenue || 0);
+                        let inviterTeamRev = parseFloat(inviterData.totalTeamRewards || inviterData.teamRevenue||  0);
                         
                         let bonus = price * 0.05; // حساب الـ 5%
                         
@@ -480,9 +491,24 @@ async function distributeTeamRewards(userData, profit) {
                             totalTeamRewards: inviterTeamRev + bonus,
                             teamRevenue: inviterTeamRev + bonus
                         });
+
+                        // 🔔 إضافة الحركة لجدول العمليات (مركز النشاط) بشكل ثابت
+                        const newTransRef = doc(collection(db, "transactions"));
+                        transaction.set(newTransRef, {
+                            userId: inviterUid,
+                            amount: bonus,
+                            type: "team_reward",
+                            description:` مكافأة دعوة - ترقية صديق لـ VIP ${id}`,
+                            createdAt: new Date()
+                        });
                     }
                 });
                 
+                showToast("🎉 تم تفعيل الخطة بنجاح وتم صرف عمولة الدعوة!");
+            } catch (error) {
+                showToast(`❌ ${error}`, true);
+            }
+        };
                 showToast("🎉 تم تفعيل الخطة بنجاح وتم صرف عمولة الدعوة!");
             } catch (error) {
                 showToast(`❌ ${error}`, true);
