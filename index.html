@@ -346,7 +346,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, query, where,getDoc ,getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -368,6 +368,13 @@
             .catch((error) => {
                 console.error("حدث خطأ في تفعيل التخزين:", error);
             });
+        // 🔥 هذا الحارس يفحص الذاكرة أول ما تفتحين التطبيق 🔥
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // إذا لقى المستخدم مسجل دخول ومحفوظ بالذاكرة، يحوله فوراً للرئيسية!
+                window.location.replace("home.html");
+            }
+        });
         const db = getFirestore(app);
 
         let currentLoginType = 'email';
