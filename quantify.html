@@ -257,31 +257,52 @@
         let isProcessing = false;
         let dataStreamInterval;
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
-                    if (docSnap.exists()) { 
-                        let data = docSnap.data();
-                        localUserData.balance = parseFloat(data.balance || 0);
-                        localUserData.activeVipId = data.activeVipId || 0;
-                        localUserData.clicksDoneToday = data.clicksDoneToday || 0;
-                        localUserData.todayRevenue = parseFloat(data.todayRevenue || 0);
-                        localUserData.totalRevenue = parseFloat(data.totalRevenue || 0);
-                        localUserData.teamRevenue = parseFloat(data.teamRevenue || data.totalTeamRewards || 0);
-                        localUserData.isLockedFor24h = data.isLockedFor24h || false;
-                        localUserData.lastCompletionTime = data.lastCompletionTime || null;
-                        localUserData.parentId = data.parentId || null;
-                        localUserData.referredByUid = data.referredByUid || null;
-                        
-                        renderVipCards();
-                        updateUI();
-                    }
-                });
-            } else {
-                window.location.href = "login.html"; 
+               // 1. نضيف متغير برة يحفظ قيمة أرباح الفريق السابقة حتى نقارنها
+let previousTeamRevenue = null;
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        
+        onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+            if (docSnap.exists()) { 
+                let data = docSnap.data();
+                
+                // جلب أرباح الفريق الحالية من قاعدة البيانات
+                let currentTeamRevenue = parseFloat(data.teamRevenue||  data.totalTeamRewards||  0);
+
+                // 2. التحقق الذكي: إذا كانت الأرباح السابقة محفوظة، والأرباح الجديدة أكبر منها (يعني إجته فلوس!)
+                if (previousTeamRevenue !== null && currentTeamRevenue > previousTeamRevenue) {
+                    // حساب قيمة المكافأة اللي وصلته هسه بالضبط
+                    let bonusReceived = (currentTeamRevenue - previousTeamRevenue).toFixed(2);
+                    
+                    // إطلاق إشعار المكافأة! 🎉
+                    showToast(`🎉 مبروك! حصللت على مكافأة فريق بقيمة $${bonusReceived}`);
+                }
+
+                // 3. تحديث الأرباح السابقة لتطابق الجديدة حتى يكتشف المكافآت الجاية
+                previousTeamRevenue = currentTeamRevenue;
+
+                // --- باقي المتغيرات مالتك الأصلية بدون أي تغيير ---
+                localUserData.balance = parseFloat(data.balance || 0);
+                localUserData.activeVipId = data.activeVipId || 0;
+                localUserData.clicksDoneToday = data.clicksDoneToday || 0;
+                localUserData.todayRevenue = parseFloat(data.todayRevenue || 0);
+                localUserData.totalRevenue = parseFloat(data.totalRevenue || 0);
+                localUserData.teamRevenue = currentTeamRevenue; // استخدمنا المتغير اللي عرفناه فوك
+                localUserData.isLockedFor24h = data.isLockedFor24h || false;
+                localUserData.lastCompletionTime = data.lastCompletionTime || null;
+                localUserData.parentId = data.parentId || null;
+                localUserData.referredByUid = data.referredByUid || null;
+                
+                if (typeof renderVipCards === "function") renderVipCards();
+                if (typeof updateUI === "function") updateUI();
             }
         });
+    } else {
+        window.location.href = "login.html"; 
+    }
+});
 async function distributeTeamRewards(userData, profit) {
     const levels = [
         { uid: userData.level1, percent: 0.10 }, // المستوى 1 (10%)
