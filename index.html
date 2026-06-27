@@ -691,12 +691,36 @@ await setDoc(doc(db, "users", user.uid), {
                     });
                 }
 
-                await signInWithEmailAndPassword(auth, emailToSignIn, password);
-                localStorage.setItem("userPhone", userPhoneToStore);
+               // 1. تسجل دخول بالفايربيس طبيعي ونأخذ معلومات الحساب
+const userCredential = await signInWithEmailAndPassword(auth, emailToSignIn, password);
+const user = userCredential.user;
 
-                showToast('تم تسجيل الدخول بنجاح!', 'success');
-                setTimeout(() => { window.location.href = "home.html"; }, 1500);
+// 2. نخزن رقم الهاتف بالذاكرة المحلية (كودك القديم)
+localStorage.setItem("userPhone", userPhoneToStore);
 
+// 🔥 3. الفحص الذكي: إذا مالقى يوزر بالـ Database يسويله واحد فوراً 🔥
+const docRef = doc(db, "users", user.uid);
+const docSnap = await getDoc(docRef);
+
+if (!docSnap.exists()) {
+    // نولد كود دعوة عشوائي جديد
+    let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
+    
+    // ننشئ ملف اليوزر بالـ Firestore فوراً
+    await setDoc(docRef, {
+        uid: user.uid,
+        email: user.email,
+        phone: userPhoneToStore,
+        myInviteCode: generatedInviteCode,
+        balance: 0,
+        registrationDate: new Date().toISOString()
+    });
+    console.log("تم إعادة إنشاء ملف اليوزر المحذوف تلقائياً!");
+}
+
+// 4. نطلع رسالة النجاح ونحوله لصفحة الهوم (كودك القديم)
+showToast('تم تسجيل الدخول بنجاح!', 'success');
+setTimeout(() => { window.location.href = "home.html"; }, 1500);
             } catch (error) {
                 if(error.message !== 'stop'){
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
