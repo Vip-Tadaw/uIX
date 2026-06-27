@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -118,10 +118,24 @@
                 let badgeClass = "status-pending";
                 
                 if (item.status === 'approved') {
-                    iconClass = item.type === 'deposit' ? "fa-solid fa-wallet" : "fa-solid fa-money-bill-transfer";
-                    iconColor = "#0ecb81";
-                    iconBg = "rgba(14, 203, 129, 0.1)";
-                    badgeClass = "status-success";
+                    // تمييز مظهر المكافأة الإدارية والخصم الإداري بأيقونات وألوان خاصة
+                    if (item.subType === 'admin_gift') {
+                        iconClass = "fa-solid fa-gift";       // أيقونة هدية
+                        iconColor = "#fcd535";                 // لون ذهبي مميز
+                        iconBg = "rgba(252, 213, 53, 0.15)";
+                        badgeClass = "status-success";
+                    } else if (item.subType === 'admin_deduction') {
+                        iconClass = "fa-solid fa-triangle-exclamation"; // أيقونة تحذير للخصم
+                        iconColor = "#f6465d";                         // لون أحمر
+                        iconBg = "rgba(246, 70, 93, 0.15)";
+                        badgeClass = "status-rejected";
+                    } else {
+                        // المظهر الافتراضي للإيداع والسحب العادي المقبول
+                        iconClass = item.type === 'deposit' ? "fa-solid fa-wallet" : "fa-solid fa-money-bill-transfer";
+                        iconColor = "#0ecb81";
+                        iconBg = "rgba(14, 203, 129, 0.1)";
+                        badgeClass = "status-success";
+                    }
                 } else if (item.status === 'pending') {
                     iconClass = "fa-solid fa-clock";
                     iconColor = "#fcd535";
@@ -134,7 +148,6 @@
                     badgeClass = "status-rejected";
                 }
 
-                // تم تصحيح الخطأ هنا (إغلاق الـ Template Literal بشكل صحيح)
                 card.innerHTML = `
                     <div class="notif-icon-box" style="background-color: ${iconBg}; color: ${iconColor};">
                         <i class="${iconClass}"></i>
@@ -169,12 +182,19 @@
                         
                         let titleText = "طلب إيداع رصيد";
                         let statusTxt = "قيد المعالجة";
-                        // تم تصحيح الخطأ هنا (إضافة الـ backticks)
                         let msgText = `جاري مراجعة طلب إيداعك بقيمة ${data.amount} USDT من قبل النظام.`;
                         
                         if(data.status === 'approved') {
-                            titleText = "إيداع مكتمل"; statusTxt = "مكتمل";
-                            msgText = `تم تأكيد عملية شحن حسابك بمبلغ ${data.amount} USDT بنجاح.`;
+                            // فحص هل العملية مكافأة إدارية أم إيداع عادي
+                            if (data.type === 'admin_gift') {
+                                titleText = "مكافأة من الإدارة 🎁"; 
+                                statusTxt = "مكتمل";
+                                msgText = `تهانينا! لقد تلقيت مكافأة مباشرة من الإدارة بقيمة ${data.amount} USDT في حسابك.`;
+                            } else {
+                                titleText = "إيداع مكتمل"; 
+                                statusTxt = "مكتمل";
+                                msgText = `تم تأكيد عملية شحن حسابك بمبلغ ${data.amount} USDT بنجاح.`;
+                            }
                         } else if(data.status === 'rejected') {
                             titleText = "إيداع مرفوض"; statusTxt = "مرفوض";
                             msgText = `تم رفض طلب الإيداع بقيمة ${data.amount} USDT، يرجى مراجعة الدعم.`;
@@ -183,6 +203,7 @@
                         allUserActivities.push({
                             id: docSnap.id,
                             type: 'deposit',
+                            subType: data.type || '', // حفظ النوع الفرعي للتمييز في التصميم
                             amount: data.amount,
                             status: data.status,
                             title: titleText,
@@ -207,12 +228,19 @@
                         
                         let titleText = "طلب سحب رصيد";
                         let statusTxt = "قيد المعالجة";
-                        // تم تصحيح الخطأ هنا (إضافة الـ backticks)
                         let msgText = `جاري مراجعة طلب السحب الخاص بك بقيمة ${data.amount} USDT.`;
                         
                         if(data.status === 'approved') {
-                            titleText = "سحب مكتمل"; statusTxt = "مكتمل";
-                            msgText = `تمت الموافقة بنجاح على تحويل مبلغ ${data.amount} USDT إلى محفظتك.`;
+                            // فحص هل العملية خصم إداري أم سحب عادي
+                            if (data.type === 'admin_deduction') {
+                                titleText = "خصم إداري ⚠️"; 
+                                statusTxt = "مكتمل";
+                                msgText = `تم إجراء خصم إداري من رصيد حسابك بقيمة ${data.amount} USDT.`;
+                            } else {
+                                titleText = "سحب مكتمل"; 
+                                statusTxt = "مكتمل";
+                                msgText = `تمت الموافقة بنجاح على تحويل مبلغ ${data.amount} USDT إلى محفظتك.`;
+                            }
                         } else if(data.status === 'rejected') {
                             titleText = "سحب مرفوض"; statusTxt = "مرفوض";
                             msgText = `تم رفض طلب سحب بقيمة ${data.amount} USDT، وتم إعادة الرصيد لحسابك.`;
@@ -221,6 +249,7 @@
                         allUserActivities.push({
                             id: docSnap.id,
                             type: 'withdraw',
+                            subType: data.type || '', // حفظ النوع الفرعي للتمييز في التصميم
                             amount: data.amount,
                             status: data.status,
                             title: titleText,
@@ -239,7 +268,9 @@
                 document.getElementById('empty-activities').style.display = 'flex';
             }
         });
-    </script>
+</script>
+
+
 </body>
 </html>
 
