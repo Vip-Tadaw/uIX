@@ -216,10 +216,10 @@
         <span data-ar="أنا" data-en="Me">أنا</span>
     </a>
 </div>
-    <script type="module">
+ <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, runTransaction, updateDoc, increment,collection,addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, runTransaction, updateDoc, increment, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // إعدادات الفايربيز
         const firebaseConfig = {
@@ -257,91 +257,93 @@
         let isProcessing = false;
         let dataStreamInterval;
 
-               // 1. نضيف متغير برة يحفظ قيمة أرباح الفريق السابقة حتى نقارنها
-let previousTeamRevenue = null;
+        // 1. نضيف متغير برة يحفظ قيمة أرباح الفريق السابقة حتى نقارنها
+        let previousTeamRevenue = null;
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        
-        onSnapshot(doc(db, "users", user.uid), (docSnap) => {
-            if (docSnap.exists()) { 
-                let data = docSnap.data();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
                 
-                // جلب أرباح الفريق الحالية من قاعدة البيانات
-                let currentTeamRevenue = parseFloat(data.teamRevenue||  data.totalTeamRewards||  0);
+                onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) { 
+                        let data = docSnap.data();
+                        
+                        // جلب أرباح الفريق الحالية من قاعدة البيانات
+                        let currentTeamRevenue = parseFloat(data.teamRevenue || data.totalTeamRewards || 0);
 
-                // 2. التحقق الذكي: إذا كانت الأرباح السابقة محفوظة، والأرباح الجديدة أكبر منها (يعني إجته فلوس!)
-                if (previousTeamRevenue !== null && currentTeamRevenue > previousTeamRevenue) {
-                    // حساب قيمة المكافأة اللي وصلته هسه بالضبط
-                    let bonusReceived = (currentTeamRevenue - previousTeamRevenue).toFixed(2);
-                    
-                    // إطلاق إشعار المكافأة! 🎉
-                    showToast(`🎉 مبروك! حصللت على مكافأة فريق بقيمة $${bonusReceived}`);
-                }
+                        // 2. التحقق الذكي: إذا كانت الأرباح السابقة محفوظة، والأرباح الجديدة أكبر منها (يعني إجته فلوس!)
+                        if (previousTeamRevenue !== null && currentTeamRevenue > previousTeamRevenue) {
+                            // حساب قيمة المكافأة اللي وصلته هسه بالضبط
+                            let bonusReceived = (currentTeamRevenue - previousTeamRevenue).toFixed(2);
+                            
+                            // إطلاق إشعار المكافأة! 🎉
+                            showToast(`🎉 مبروك! حصلت على مكافأة فريق بقيمة $${bonusReceived}`);
+                        }
 
-                // 3. تحديث الأرباح السابقة لتطابق الجديدة حتى يكتشف المكافآت الجاية
-                previousTeamRevenue = currentTeamRevenue;
+                        // 3. تحديث الأرباح السابقة لتطابق الجديدة حتى يكتشف المكافآت الجاية
+                        previousTeamRevenue = currentTeamRevenue;
 
-                // --- باقي المتغيرات مالتك الأصلية بدون أي تغيير ---
-                localUserData.balance = parseFloat(data.balance || 0);
-                localUserData.activeVipId = data.activeVipId || 0;
-                localUserData.clicksDoneToday = data.clicksDoneToday || 0;
-                localUserData.todayRevenue = parseFloat(data.todayRevenue || 0);
-                localUserData.totalRevenue = parseFloat(data.totalRevenue || 0);
-                localUserData.teamRevenue = currentTeamRevenue; // استخدمنا المتغير اللي عرفناه فوك
-                localUserData.isLockedFor24h = data.isLockedFor24h || false;
-                localUserData.lastCompletionTime = data.lastCompletionTime || null;
-                localUserData.parentId = data.parentId || null;
-                localUserData.referredByUid = data.referredByUid || null;
-                
-                if (typeof renderVipCards === "function") renderVipCards();
-                if (typeof updateUI === "function") updateUI();
+                        // --- باقي المتغيرات مالتك الأصلية بدون أي تغيير ---
+                        localUserData.balance = parseFloat(data.balance || 0);
+                        localUserData.activeVipId = data.activeVipId || 0;
+                        localUserData.clicksDoneToday = data.clicksDoneToday || 0;
+                        localUserData.todayRevenue = parseFloat(data.todayRevenue || 0);
+                        localUserData.totalRevenue = parseFloat(data.totalRevenue || 0);
+                        localUserData.teamRevenue = currentTeamRevenue; 
+                        localUserData.isLockedFor24h = data.isLockedFor24h || false;
+                        localUserData.lastCompletionTime = data.lastCompletionTime || null;
+                        localUserData.parentId = data.parentId || null;
+                        localUserData.referredByUid = data.referredByUid || null;
+                        
+                        if (typeof renderVipCards === "function") renderVipCards();
+                        if (typeof updateUI === "function") updateUI();
+                    }
+                });
+            } else {
+                window.location.href = "login.html"; 
             }
         });
-    } else {
-        window.location.href = "login.html"; 
-    }
-});
-async function distributeTeamRewards(userData, profit) {
-    const levels = [
-        { uid: userData.level1, percent: 0.10 }, // المستوى 1 (10%)
-        { uid: userData.level2, percent: 0.05 }, // المستوى 2 (5%)
-        { uid: userData.level3, percent: 0.03 }, // المستوى 3 (3%)
-        { uid: userData.level4, percent: 0.02 }, // المستوى 4 (2%)
-        { uid: userData.level5, percent: 0.01 }, // المستوى 5 (1%)
-        { uid: userData.level6, percent: 0.01 }  // المستوى 6 (1%)
-    ];
 
-    levels.forEach(async (level, index) => {
-        if (level.uid && level.uid !== "" && level.uid !== "SYSTEM_MASTER") {
-            let reward = profit * level.percent;
-            if (reward > 0) {
-                try {
-                    const levelRef = doc(db, "users", level.uid);
-                    // 1. تحديث رصيد حساب الداعي
-                    await updateDoc(levelRef, {
-                        balance: increment(reward),
-                        teamRevenue: increment(reward),
-                        totalTeamRewards: increment(reward)
-                    });
+        async function distributeTeamRewards(userData, profit) {
+            const levels = [
+                { uid: userData.level1, percent: 0.10 }, // المستوى 1 (10%)
+                { uid: userData.level2, percent: 0.05 }, // المستوى 2 (5%)
+                { uid: userData.level3, percent: 0.03 }, // المستوى 3 (3%)
+                { uid: userData.level4, percent: 0.02 }, // المستوى 4 (2%)
+                { uid: userData.level5, percent: 0.01 }, // المستوى 5 (1%)
+                { uid: userData.level6, percent: 0.01 }  // المستوى 6 (1%)
+            ];
 
-                    // 2. إضافة الإشعار الثابت بمركز النشاط (سجل العمليات)
-                    await addDoc(collection(db, "transactions"), {
-                        userId: level.uid,
-                        amount: reward,
-                        type: "team_reward",
-                        description: أرباح كمية - الفريق مستوى ${index + 1},
-                        createdAt: new Date()
-                    });
+            levels.forEach(async (level, index) => {
+                if (level.uid && level.uid !== "" && level.uid !== "SYSTEM_MASTER") {
+                    let reward = profit * level.percent;
+                    if (reward > 0) {
+                        try {
+                            const levelRef = doc(db, "users", level.uid);
+                            // 1. تحديث رصيد حساب الداعي
+                            await updateDoc(levelRef, {
+                                balance: increment(reward),
+                                teamRevenue: increment(reward),
+                                totalTeamRewards: increment(reward)
+                            });
 
-                } catch (e) {
-                    console.log("خطأ بتوزيع العمولة أو تسجيل النشاط:", e);
+                            // 2. إضافة الإشعار الثابت بمركز النشاط (سجل العمليات)
+                            await addDoc(collection(db, "transactions"), {
+                                userId: level.uid,
+                                amount: reward,
+                                type: "team_reward",
+                                description: `أرباح كمية - الفريق مستوى ${index + 1}`,
+                                createdAt: new Date()
+                            });
+
+                        } catch (e) {
+                            console.log("خطأ بتوزيع العمولة أو تسجيل النشاط:", e);
+                        }
+                    }
                 }
-            }
+            });
         }
-    });
-}
+
         window.triggerQuantificationProcessing = async function() {
             if (isProcessing || !currentUser) return;
 
@@ -417,8 +419,6 @@ async function distributeTeamRewards(userData, profit) {
                                 updates.totalRevenue = newTotalRev;
                                 updates.isLockedFor24h = true;
                                 updates.lastCompletionTime = Date.now();
-
-                                
                             }
                             transaction.update(userRef, updates);
                         });
@@ -427,10 +427,10 @@ async function distributeTeamRewards(userData, profit) {
                             showToast("👍 تم إنهاء الدورة الأولى! اضغط مجدداً للثانية.");
                         } else if (currentStatus === 2) {
                             showToast("👍 تم إنهاء الدورة الثانية! اضغط مجدداً للأخيرة.");
-                     } else if (currentStatus === 3) {
-    showToast(`✅ تم إكمال المهمة بنجاح! حصلت على $${profitEarned.toFixed(2)}`);
-    distributeTeamRewards(localUserData, profitEarned); // <-- هذا سطر توزيع الأرباح
-}
+                        } else if (currentStatus === 3) {
+                            showToast(`✅ تم إكمال المهمة بنجاح! حصلت على $${profitEarned.toFixed(2)}`);
+                            distributeTeamRewards(localUserData, profitEarned);
+                        }
 
                     } catch (error) {
                         showToast(`❌ ${error}`, true);
@@ -441,14 +441,13 @@ async function distributeTeamRewards(userData, profit) {
             }, 1000);
         };
 
-      // 💰 دالة شراء الـ VIP المحدثة بنظام مكافآت الإحالة (5%) مع تسجيل النشاط الثابت
+        // 💰 دالة شراء الـ VIP المحدثة بنظام مكافآت الإحالة (5%) مع تسجيل النشاط الثابت
         window.buyVipLevel = async function(id, price) {
             if (!currentUser) return;
             try {
                 const userRef = doc(db, "users", currentUser.uid);
                 
                 await runTransaction(db, async (transaction) => {
-                    // القراءة الأولى: حساب المشترك
                     const sfDoc = await transaction.get(userRef);
                     if (!sfDoc.exists()) throw "المستخدم غير موجود!";
                     
@@ -456,10 +455,9 @@ async function distributeTeamRewards(userData, profit) {
                     let currentBal = parseFloat(data.balance || 0);
 
                     if (currentBal < price) {
-                        throw` رصيدك الفعلي غير كافٍ للترقية! تحتاج $${price}`;
+                        throw `رصيدك الفعلي غير كافٍ للترقية! تحتاج $${price}`;
                     }
 
-                    // البحث عن الداعي (القراءة الثانية)
                     let inviterUid = data.referredByUid || data.parentId; 
                     let inviterRef = null;
                     let inviterDoc = null;
@@ -482,9 +480,9 @@ async function distributeTeamRewards(userData, profit) {
                     if (inviterDoc && inviterDoc.exists()) {
                         let inviterData = inviterDoc.data();
                         let inviterBal = parseFloat(inviterData.balance || 0);
-                        let inviterTeamRev = parseFloat(inviterData.totalTeamRewards || inviterData.teamRevenue||  0);
+                        let inviterTeamRev = parseFloat(inviterData.totalTeamRewards || inviterData.teamRevenue || 0);
                         
-                        let bonus = price * 0.05; // حساب الـ 5%
+                        let bonus = price * 0.05; 
                         
                         transaction.update(inviterRef, {
                             balance: inviterBal + bonus,
@@ -492,13 +490,12 @@ async function distributeTeamRewards(userData, profit) {
                             teamRevenue: inviterTeamRev + bonus
                         });
 
-                        // 🔔 إضافة الحركة لجدول العمليات (مركز النشاط) بشكل ثابت
                         const newTransRef = doc(collection(db, "transactions"));
                         transaction.set(newTransRef, {
                             userId: inviterUid,
                             amount: bonus,
                             type: "team_reward",
-                            description:` مكافأة دعوة - ترقية صديق لـ VIP ${id}`,
+                            description: `مكافأة دعوة - ترقية صديق لـ VIP ${id}`,
                             createdAt: new Date()
                         });
                     }
@@ -509,14 +506,10 @@ async function distributeTeamRewards(userData, profit) {
                 showToast(`❌ ${error}`, true);
             }
         };
-                showToast("🎉 تم تفعيل الخطة بنجاح وتم صرف عمولة الدعوة!");
-            } catch (error) {
-                showToast(`❌ ${error}`, true);
-            }
-        };
 
         window.showToast = function(text, isError = false) {
             let toast = document.getElementById('toastNotifier');
+            if(!toast) return;
             toast.innerText = text;
             toast.style.background = isError ? '#f6465d' : '#02c076';
             toast.style.top = "20px";
@@ -637,6 +630,8 @@ async function distributeTeamRewards(userData, profit) {
             document.getElementById('clock-countdown').innerText = `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
         }, 1000);
     </script>
+
+
 
 
 </body>
