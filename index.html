@@ -348,11 +348,11 @@
         </div>
     </div>
 
-    <script type="module">
+       <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, query, where,getDoc ,getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-
+        import { getFirestore, doc, setDoc, collection, query, where, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCa3nVSth5Jhhuhvblw23w0uxzR1VJHLOo",
             authDomain: "yaqoout-b4c83.firebaseapp.com",
@@ -365,53 +365,57 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-         setPersistence(auth, browserLocalPersistence)
-            .then(() => {
-                console.log("تم تفعيل التخزين الدائم بنجاح");
-            })
-            .catch((error) => {
-                console.error("حدث خطأ في تفعيل التخزين:", error);
-            });
-        // 🍿 حارس الفحص الذكي + شاشة التحميل المؤقتة
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // إذا لقى الحساب محفوظ.. طيران على الصفحة الرئيسية!
-                window.location.replace("home.html");
-            } else {
-                // إذا طلع ممسجل دخول.. نخفي الشاشة السوداء ونراويه حقول التسجيل براحته
-                const splash = document.getElementById('app-splash');
-                if (splash) {
-                    splash.style.display = 'none';
-                }
-            }
-        });
-       
         const db = getFirestore(app);
 
+        setPersistence(auth, browserLocalPersistence)
+            .then(() => { console.log("تم تفعيل التخزين الدائم بنجاح"); })
+            .catch((error) => { console.error("حدث خطأ في تفعيل التخزين:", error); });
+
+        // حارس الفحص الذكي لشاشة التحميل
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // فحص إضافي: لو اليوزر مسجل دخول بس ملفه بالـ Firestore محذوف، يتم إنشائه فوراً
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
+                if (!docSnap.exists()) {
+                    let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
+                    await setDoc(docRef, {
+                        email: user.email,
+                        phone: localStorage.getItem("userPhone") || "0000000000",
+                        myInviteCode: generatedInviteCode,   
+                        referredByUid: "SYSTEM_MASTER", 
+                        level1: "SYSTEM_MASTER", level2: "", level3: "", level4: "", level5: "", level6: "",
+                        balance: 0, 
+                        activeVipId: 0,
+                        clicksDoneToday: 0,
+                        totalTeamRewards: 0,
+                        teamRevenue: 0,
+                        createdAt: new Date()
+                    });
+                }
+                window.location.replace("home.html");
+            } else {
+                const splash = document.getElementById('app-splash');
+                if (splash) { splash.style.display = 'none'; }
+            }
+        });
+
         let currentLoginType = 'email';
+        const MASTER_INVITE_CODE = "VIP2026";
 
-        // 🌟 الكود العام (الماستر) - يُستخدم للدخول السريع بدون دعوة مسبقة
-        const MASTER_INVITE_CODE = "VIP2026"; 
-
-        // 🌟 دالة توليد رمز دعوة فريد (لكل مستخدم جديد)
+        // دالة توليد رمز دعوة فريد
         async function generateUniqueInviteCode() {
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             const numbers = '0123456789';
             let isUnique = false;
             let finalCode = '';
-
             while (!isUnique) {
                 let result = '';
-                for (let i = 0; i < 6; i++) {
-                    result += numbers.charAt(Math.floor(Math.random() * numbers.length));
-                }
-                for (let i = 0; i < 2; i++) {
-                    result += letters.charAt(Math.floor(Math.random() * letters.length));
-                }
+                for (let i = 0; i < 6; i++) { result += numbers.charAt(Math.floor(Math.random() * numbers.length)); }
+                for (let i = 0; i < 2; i++) { result += letters.charAt(Math.floor(Math.random() * letters.length)); }
                 
                 const codeQuery = query(collection(db, "users"), where("myInviteCode", "==", result));
                 const codeSnapshot = await getDocs(codeQuery);
-                
                 if (codeSnapshot.empty) {
                     finalCode = result;
                     isUnique = true; 
@@ -420,11 +424,9 @@
             return finalCode;
         }
 
-        // قراءة كود الدعوة من الرابط تلقائياً
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const inviteCode = urlParams.get('invite'); 
-            
             if (inviteCode) {
                 const referralInput = document.getElementById('regReferral');
                 referralInput.value = inviteCode;
@@ -434,12 +436,11 @@
             }
         });
 
-        // دوال الإشعارات والواجهة
         window.showToast = function(message, type = 'error') {
             const toast = document.getElementById('toast-container');
             const icon = document.getElementById('toast-icon');
             const msgSpan = document.getElementById('toast-message');
-            toast.className = 'toast-notification'; 
+            toast.className = 'toast-notification';
             if (type === 'success') {
                 toast.classList.add('toast-success');
                 icon.className = 'fa-solid fa-circle-check';
@@ -468,7 +469,6 @@
             tabEmail.classList.remove('active');
             tabPhone.classList.remove('active');
             userInput.value = '';
-
             if (type === 'email') {
                 tabEmail.classList.add('active');
                 userInput.placeholder = 'البريد الإلكتروني';
@@ -510,7 +510,7 @@
             return lettersMatch && lettersMatch.length >= 2;
         }
 
-        // 🛡 معالجة التسجيل (دعم كامل للكود العام والمستمر)
+        // معالجة التسجيل المعدلة والمحمية من الحذف اليدوي
         window.handleRegister = async function(event) {
             event.preventDefault();
             const btn = document.getElementById('regBtn');
@@ -521,7 +521,7 @@
             const phone = document.getElementById('regPhone').value.trim();
             const password = document.getElementById('regPassword').value;
             const confirm = document.getElementById('regConfirm').value;
-            const referral = document.getElementById('regReferral').value.trim(); 
+            const referral = document.getElementById('regReferral').value.trim();
 
             if (!isValidPassword(password)) {
                 triggerError('regPassword', 'كلمة المرور ضعيفة! يجب أن تكون 8 رموز وتتضمن حرفين على الأقل.');
@@ -532,13 +532,12 @@
                 return;
             }
 
-            // تشغيل الأنيميشن مال التحميل
             btn.disabled = true;
             btnText.innerText = 'جاري انشاء الحساب...';
             spinner.style.display = 'inline-block';
 
             try {
-                // التحقق من الهاتف
+                // التحقق من الهاتف بقاعدة البيانات أولاً
                 const phoneCheckQuery = query(collection(db, "users"), where("phone", "==", phone));
                 const phoneCheckSnapshot = await getDocs(phoneCheckQuery);
                 if (!phoneCheckSnapshot.empty) {
@@ -550,7 +549,6 @@
                 let inviterPhone = "";
                 let inviterFound = false;
 
-                // 🌟 نظام الفحص الذكي (الكود العام أو كود صديق أو هاتف قديم)
                 if (referral === MASTER_INVITE_CODE) {
                     inviterFound = true;
                     inviterUid = "SYSTEM_MASTER";
@@ -586,64 +584,68 @@
                     throw new Error('stop');
                 }
 
-                // 🌟 توليد كود دعوة فريد للمستخدم الجديد بكل الأحوال
                 const newInviteCode = await generateUniqueInviteCode();
+                let user;
 
-                // إنشاء الحساب
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-let level1 = inviterUid;
-let level2 = "", level3 = "", level4 = "", level5 = "", level6 = "";
+                try {
+                    // محاولة إنشاء الحساب في الـ Auth
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    user = userCredential.user;
+                } catch (authError) {
+                    // إذا كان الإيميل موجوداً مسبقاً بالـ Auth (بسبب الحذف اليدوي من Firestore فقط) نقوم بتسجيل الدخول به لإعادة بناء الملف
+                    if (authError.code === 'auth/email-already-in-use') {
+                        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        user = userCredential.user;
+                    } else {
+                        throw authError;
+                    }
+                }
 
-// جلب سلسلة الوكلاء الستة للشخص اللي دعا المستخدم الجديد
-if (inviterUid !== "SYSTEM_MASTER" && inviterUid !== "") {
-    const inviterDocRef = doc(db, "users", inviterUid);
-    const inviterSnap = await getDoc(inviterDocRef);
-    if (inviterSnap.exists()) {
-        const invData = inviterSnap.data();
-        level2 = invData.level1 || "";
-        level3 = invData.level2 || "";
-        level4 = invData.level3 || "";
-        level5 = invData.level4 || "";
-        level6 = invData.level5 || "";
-    }
-}
+                let level1 = inviterUid;
+                let level2 = "", level3 = "", level4 = "", level5 = "", level6 = "";
 
-// الآن نحفظ المستخدم الجديد مع شجرة أجداده الستة
-await setDoc(doc(db, "users", user.uid), {
-    email: email,
-    phone: phone,
-    myInviteCode: newInviteCode,   
-    referredByUid: inviterUid, 
-    // إضافة مستويات الفريق الستة لحسابه
-    level1: level1,
-    level2: level2,
-    level3: level3,
-    level4: level4,
-    level5: level5,
-    level6: level6,
-    
-    balance: 0, 
-    activeVipId: 0,
-    clicksDoneToday: 0,
-    totalTeamRewards: 0,
-    teamRevenue: 0,
-    createdAt: new Date()
-});
+                if (inviterUid !== "SYSTEM_MASTER" && inviterUid !== "") {
+                    const inviterDocRef = doc(db, "users", inviterUid);
+                    const inviterSnap = await getDoc(inviterDocRef);
+                    if (inviterSnap.exists()) {
+                        const invData = inviterSnap.data();
+                        level2 = invData.level1 || "";
+                        level3 = invData.level2 || "";
+                        level4 = invData.level3 || "";
+                        level5 = invData.level4 || "";
+                        level6 = invData.level5 || "";
+                    }
+                }
+
+                // حفظ أو إعادة إنشاء ملف اليوزر في Firestore فوراً
+                await setDoc(doc(db, "users", user.uid), {
+                    email: email,
+                    phone: phone,
+                    myInviteCode: newInviteCode,   
+                    referredByUid: inviterUid, 
+                    level1: level1,
+                    level2: level2,
+                    level3: level3,
+                    level4: level4,
+                    level5: level5,
+                    level6: level6,
+                    balance: 0, 
+                    activeVipId: 0,
+                    clicksDoneToday: 0,
+                    totalTeamRewards: 0,
+                    teamRevenue: 0,
+                    createdAt: new Date()
+                });
 
                 localStorage.setItem("hasRegisteredOnThisDevice", "true");
                 localStorage.setItem("userPhone", phone);
 
-                showToast('تم إنشاء الحساب بنجاح! مبروك...', 'success');
+                showToast('تم إنشاء وتأكيد الحساب بنجاح!', 'success');
                 setTimeout(() => { window.location.href = "home.html"; }, 1500);
 
             } catch (error) {
                 if(error.message !== 'stop'){
-                    if (error.code === 'auth/email-already-in-use') {
-                        triggerError('regEmail', 'هذا البريد الإلكتروني مسجل بالفعل!');
-                    } else {
-                        showToast('حدث خطأ: ' + error.message, 'error');
-                    }
+                    showToast('حدث خطأ: ' + error.message, 'error');
                 }
             } finally {
                 btn.disabled = false;
@@ -652,7 +654,7 @@ await setDoc(doc(db, "users", user.uid), {
             }
         }
 
-        // 🛡 معالجة تسجيل الدخول (صارت نظيفة وبدون كود دعوة)
+        // معالجة تسجيل الدخول الذكي
         window.handleLogin = async function(event) {
             event.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -691,36 +693,35 @@ await setDoc(doc(db, "users", user.uid), {
                     });
                 }
 
-               // 1. تسجل دخول بالفايربيس طبيعي ونأخذ معلومات الحساب
-const userCredential = await signInWithEmailAndPassword(auth, emailToSignIn, password);
-const user = userCredential.user;
+                const userCredential = await signInWithEmailAndPassword(auth, emailToSignIn, password);
+                const user = userCredential.user;
 
-// 2. نخزن رقم الهاتف بالذاكرة المحلية (كودك القديم)
-localStorage.setItem("userPhone", userPhoneToStore);
+                localStorage.setItem("userPhone", userPhoneToStore);
 
-// 🔥 3. الفحص الذكي: إذا مالقى يوزر بالـ Database يسويله واحد فوراً 🔥
-const docRef = doc(db, "users", user.uid);
-const docSnap = await getDoc(docRef);
+                // الفحص الذكي عند تسجيل الدخول
+                const docRef = doc(db, "users", user.uid);
+                const docSnap = await getDoc(docRef);
 
-if (!docSnap.exists()) {
-    // نولد كود دعوة عشوائي جديد
-    let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
-    
-    // ننشئ ملف اليوزر بالـ Firestore فوراً
-    await setDoc(docRef, {
-        uid: user.uid,
-        email: user.email,
-        phone: userPhoneToStore,
-        myInviteCode: generatedInviteCode,
-        balance: 0,
-        registrationDate: new Date().toISOString()
-    });
-    console.log("تم إعادة إنشاء ملف اليوزر المحذوف تلقائياً!");
-}
+                if (!docSnap.exists()) {
+                    let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
+                    await setDoc(docRef, {
+                        email: user.email,
+                        phone: userPhoneToStore,
+                        myInviteCode: generatedInviteCode,
+                        referredByUid: "SYSTEM_MASTER", 
+                        level1: "SYSTEM_MASTER", level2: "", level3: "", level4: "", level5: "", level6: "",
+                        balance: 0,
+                        activeVipId: 0,
+                        clicksDoneToday: 0,
+                        totalTeamRewards: 0,
+                        teamRevenue: 0,
+                        createdAt: new Date()
+                    });
+                    console.log("تم إعادة إنشاء ملف اليوزر المحذوف تلقائياً!");
+                }
 
-// 4. نطلع رسالة النجاح ونحوله لصفحة الهوم (كودك القديم)
-showToast('تم تسجيل الدخول بنجاح!', 'success');
-setTimeout(() => { window.location.href = "home.html"; }, 1500);
+                showToast('تم تسجيل الدخول بنجاح!', 'success');
+                setTimeout(() => { window.location.href = "home.html"; }, 1500);
             } catch (error) {
                 if(error.message !== 'stop'){
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
@@ -738,6 +739,8 @@ setTimeout(() => { window.location.href = "home.html"; }, 1500);
             }
         }
     </script>
+
+
 </body>
 </html>
 
