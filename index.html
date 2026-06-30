@@ -75,15 +75,17 @@
         @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(50px); /* يبدأ من أسفل مكانه الطبيعي بـ 50 بكسل */
+        transform: translateY(100px) !important; /* يزيد مسافة الصعود من الأسفل */
     }
     to {
         opacity: 1;
-        transform: translateY(0); /* يستقر بمكانه الطبيعي */
+        transform: translateY(0) !important; /* يستقر بمكانه الطبيعي */
     }
 }
+
 .logo-animation {
-    animation: fadeInUp 1.2s ease-out forwards; /* الـ forwards تضمن إنه يبقى فوق وما يرجع ينزل */
+    animation: fadeInUp 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+    display: inline-block !important; /* يضمن استجابة الصورة للحركة */
 }
          @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
