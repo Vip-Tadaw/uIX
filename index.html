@@ -46,7 +46,7 @@
             transition: transform 0.3s ease;
         }
         .logo-section img:hover {
-            transform: scale(1.05); /* حركة خفيفة للشعار عند التمرير */
+            transform: scale(1.05);
         }
         .logo-section h1 {
             font-size: 24px;
@@ -216,7 +216,7 @@
             color: #ffffff;
         }
 
-        /* تصميم الإشعارات المنبثقة (Toasts) التفاعلية */
+        /* تصميم الإشعارات المنبثقة */
         .toast-notification {
             position: fixed;
             top: -100px;
@@ -258,9 +258,9 @@
 </head>
 <body>
     <div id="app-splash" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #0b0e11; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px;">
-    <img src="logo.jpg" alt="Logo" style="width: 80px; height: 80px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-    <i class="fa-solid fa-spinner fa-spin" style="color: #fcd535; font-size: 30px;"></i>
-</div>
+        <img src="logo.jpg" alt="Logo" style="width: 80px; height: 80px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        <i class="fa-solid fa-spinner fa-spin" style="color: #fcd535; font-size: 30px;"></i>
+    </div>
 
     <div id="toast-container" class="toast-notification">
         <i id="toast-icon" class="fa-solid"></i>
@@ -347,8 +347,8 @@
             </div>
         </div>
     </div>
-
-       <script type="module">
+    
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, query, where, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -371,29 +371,35 @@
             .then(() => { console.log("تم تفعيل التخزين الدائم بنجاح"); })
             .catch((error) => { console.error("حدث خطأ في تفعيل التخزين:", error); });
 
-        // حارس الفحص الذكي لشاشة التحميل
+        // حارس الفحص الذكي مع تأخير متعمد لمنع التداخل (Race Condition)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // فحص إضافي: لو اليوزر مسجل دخول بس ملفه بالـ Firestore محذوف، يتم إنشائه فوراً
-                const docRef = doc(db, "users", user.uid);
-                const docSnap = await getDoc(docRef);
-                if (!docSnap.exists()) {
-                    let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
-                    await setDoc(docRef, {
-                        email: user.email,
-                        phone: localStorage.getItem("userPhone") || "0000000000",
-                        myInviteCode: generatedInviteCode,   
-                        referredByUid: "SYSTEM_MASTER", 
-                        level1: "SYSTEM_MASTER", level2: "", level3: "", level4: "", level5: "", level6: "",
-                        balance: 0, 
-                        activeVipId: 0,
-                        clicksDoneToday: 0,
-                        totalTeamRewards: 0,
-                        teamRevenue: 0,
-                        createdAt: new Date()
-                    });
-                }
-                window.location.replace("home.html");
+                setTimeout(async () => {
+                    const docRef = doc(db, "users", user.uid);
+                    const docSnap = await getDoc(docRef);
+                    if (!docSnap.exists()) {
+                        let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
+                        await setDoc(docRef, {
+                            email: user.email,
+                            phone: localStorage.getItem("userPhone") || "0000000000",
+                            myInviteCode: generatedInviteCode,   
+                            referredByUid: "SYSTEM_MASTER", 
+                            level1: "SYSTEM_MASTER", level2: "", level3: "", level4: "", level5: "", level6: "",
+                            balance: 0, 
+                            activeVipId: 0,
+                            clicksDoneToday: 0,
+                            totalTeamRewards: 0,
+                            teamRevenue: 0,
+                            createdAt: new Date(),
+                            isWithdrawLocked: false,
+                            withdrawMessage: "",
+                            isTasksLocked: false,
+                            tasksMessage: "",
+                            accountStatus: "active"
+                        });
+                    }
+                    window.location.replace("home.html");
+                }, 2500); // 2.5 ثانية تأخير حتى تكمل عملية التسجيل براحتها وتأخذ بيانات الدعوة الصح
             } else {
                 const splash = document.getElementById('app-splash');
                 if (splash) { splash.style.display = 'none'; }
@@ -403,7 +409,6 @@
         let currentLoginType = 'email';
         const MASTER_INVITE_CODE = "VIP2026";
 
-        // دالة توليد رمز دعوة فريد
         async function generateUniqueInviteCode() {
             const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             const numbers = '0123456789';
@@ -510,7 +515,6 @@
             return lettersMatch && lettersMatch.length >= 2;
         }
 
-        // معالجة التسجيل المعدلة والمحمية من الحذف اليدوي
         window.handleRegister = async function(event) {
             event.preventDefault();
             const btn = document.getElementById('regBtn');
@@ -537,7 +541,6 @@
             spinner.style.display = 'inline-block';
 
             try {
-                // التحقق من الهاتف بقاعدة البيانات أولاً
                 const phoneCheckQuery = query(collection(db, "users"), where("phone", "==", phone));
                 const phoneCheckSnapshot = await getDocs(phoneCheckQuery);
                 if (!phoneCheckSnapshot.empty) {
@@ -588,11 +591,9 @@
                 let user;
 
                 try {
-                    // محاولة إنشاء الحساب في الـ Auth
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     user = userCredential.user;
                 } catch (authError) {
-                    // إذا كان الإيميل موجوداً مسبقاً بالـ Auth (بسبب الحذف اليدوي من Firestore فقط) نقوم بتسجيل الدخول به لإعادة بناء الملف
                     if (authError.code === 'auth/email-already-in-use') {
                         const userCredential = await signInWithEmailAndPassword(auth, email, password);
                         user = userCredential.user;
@@ -617,7 +618,6 @@
                     }
                 }
 
-                // حفظ أو إعادة إنشاء ملف اليوزر في Firestore فوراً
                 await setDoc(doc(db, "users", user.uid), {
                     email: email,
                     phone: phone,
@@ -634,14 +634,19 @@
                     clicksDoneToday: 0,
                     totalTeamRewards: 0,
                     teamRevenue: 0,
-                    createdAt: new Date()
+                    createdAt: new Date(),
+                    isWithdrawLocked: false,
+                    withdrawMessage: "",
+                    isTasksLocked: false,
+                    tasksMessage: "",
+                    accountStatus: "active"
                 });
 
                 localStorage.setItem("hasRegisteredOnThisDevice", "true");
                 localStorage.setItem("userPhone", phone);
 
                 showToast('تم إنشاء وتأكيد الحساب بنجاح!', 'success');
-                setTimeout(() => { window.location.href = "home.html"; }, 1500);
+                // لا نحتاج نكتب سطر التحويل هنا لأن onAuthStateChanged راح تتكفل بيه بكل سلاسة
 
             } catch (error) {
                 if(error.message !== 'stop'){
@@ -654,7 +659,6 @@
             }
         }
 
-        // معالجة تسجيل الدخول الذكي
         window.handleLogin = async function(event) {
             event.preventDefault();
             const btn = document.getElementById('loginBtn');
@@ -698,7 +702,6 @@
 
                 localStorage.setItem("userPhone", userPhoneToStore);
 
-                // الفحص الذكي عند تسجيل الدخول
                 const docRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(docRef);
 
@@ -706,7 +709,7 @@
                     let generatedInviteCode = "TX" + Math.floor(100000 + Math.random() * 900000);
                     await setDoc(docRef, {
                         email: user.email,
-                        phone: userPhoneToStore,
+                        phone: userPhoneToStore || "0000000000",
                         myInviteCode: generatedInviteCode,
                         referredByUid: "SYSTEM_MASTER", 
                         level1: "SYSTEM_MASTER", level2: "", level3: "", level4: "", level5: "", level6: "",
@@ -715,13 +718,17 @@
                         clicksDoneToday: 0,
                         totalTeamRewards: 0,
                         teamRevenue: 0,
-                        createdAt: new Date()
+                        createdAt: new Date(),
+                        isWithdrawLocked: false,
+                        withdrawMessage: "",
+                        isTasksLocked: false,
+                        tasksMessage: "",
+                        accountStatus: "active"
                     });
                     console.log("تم إعادة إنشاء ملف اليوزر المحذوف تلقائياً!");
                 }
 
                 showToast('تم تسجيل الدخول بنجاح!', 'success');
-                setTimeout(() => { window.location.href = "home.html"; }, 1500);
             } catch (error) {
                 if(error.message !== 'stop'){
                     if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
@@ -739,8 +746,6 @@
             }
         }
     </script>
-
-
 </body>
 </html>
 
