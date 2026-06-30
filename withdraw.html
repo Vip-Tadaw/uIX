@@ -308,7 +308,11 @@ if(currentUserData.walletAddress && !addressInput.value) {
                     if (data.withdrawPassword !== passInput) {
                         throw "كلمة المرور الأمنية خاطئة! محاولة غير مصرح بها.";
                     }
-
+// --- فحص تحكم السوبر أدمن ---
+                    if (data.isWithdrawLocked === true) {
+                        let msg = data.withdrawMessage || "تم إيقاف السحب مؤقتاً لحسابك. يرجى التواصل مع الدعم.";
+                        throw msg; 
+                    }
                    
 
                     // 3. التحقق من الرصيد والحد الأدنى
