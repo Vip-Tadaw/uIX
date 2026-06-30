@@ -237,13 +237,15 @@
         let localUserData = {
             balance: 0.00, purchasedVips: [0], activeVipId: 0, clicksDoneToday: 0,
             todayRevenue: 0.00, totalRevenue: 0.00, teamRevenue: 0.00,
-            isLockedFor24h: false, lastCompletionTime: null, parentId: null, referredByUid: null
+            isLockedFor24h: false, lastCompletionTime: null, parentId: null, referredByUid: null,
+            // المتغيرات الجديدة الخاصة بالقفل الإداري
+            isTasksLocked: false, tasksMessage: ""
         };
         
         let isProcessing = false;
         let dataStreamInterval;
         let previousTeamRevenue = null;
-
+        
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -261,9 +263,7 @@
 
                         previousTeamRevenue = currentTeamRevenue;
                         
-                        // التعديل: قراءة قائمة الباقات
                         localUserData.purchasedVips = data.purchasedVips || (data.activeVipId !== undefined ? [data.activeVipId] : [0]);
-                        
                         localUserData.balance = parseFloat(data.balance || 0);
                         localUserData.activeVipId = data.activeVipId || 0;
                         localUserData.clicksDoneToday = data.clicksDoneToday || 0;
@@ -274,6 +274,10 @@
                         localUserData.lastCompletionTime = data.lastCompletionTime || null;
                         localUserData.parentId = data.parentId || null;
                         localUserData.referredByUid = data.referredByUid || null;
+                        
+                        // 👇 قراءة حالة قفل المهام من السوبر أدمن 👇
+                        localUserData.isTasksLocked = data.isTasksLocked || false;
+                        localUserData.tasksMessage = data.tasksMessage || "";
                         
                         if (typeof renderVipCards === "function") renderVipCards();
                         if (typeof updateUI === "function") updateUI();
@@ -323,8 +327,15 @@
         window.triggerQuantificationProcessing = async function() {
             if (isProcessing || !currentUser) return;
             
+            // 👇 فحص قفل المهام من السوبر أدمن قبل كل شيء 👇
+            if (localUserData.isTasksLocked === true) {
+                let msg = localUserData.tasksMessage || "تم إيقاف المهام لحسابك. يرجى التواصل مع الدعم.";
+                showToast(msg, true); // إظهار الرسالة الحمراء
+                return; // إيقاف العملية ومنع البصمة من الدوران
+            }
+
             let purchased = localUserData.purchasedVips || [0];
-            let maxClicks = purchased.length * 3; // مضاعفة المهام
+            let maxClicks = purchased.length * 3;
 
             if (localUserData.isLockedFor24h || localUserData.clicksDoneToday >= maxClicks) {
                 showToast("لقد أكملت مهامك لليوم، انتظر العداد! ⏳", true);
@@ -375,6 +386,12 @@
                             if (!sfDoc.exists()) throw "المستخدم غير موجود بالبيانات!";
                             
                             let data = sfDoc.data();
+                            
+                            // 👇 الحماية القصوى داخل السيرفر لمنع التلاعب (تأكيد القفل الإداري) 👇
+                            if (data.isTasksLocked === true) {
+                                throw data.tasksMessage || "تم إيقاف المهام لحسابك.";
+                            }
+                            
                             let dbPurchased = data.purchasedVips || (data.activeVipId !== undefined ? [data.activeVipId] : [0]);
                             txMaxClicks = dbPurchased.length * 3;
                             
@@ -425,7 +442,6 @@
             }, 1000);
         };
 
-        // 💰 دالة شراء الـ VIP معدلة لإضافة الباقات للمصفوفة بدل مسحها
         window.buyVipLevel = async function(id, price) {
             if (!currentUser) return;
             try {
@@ -447,7 +463,6 @@
                         throw "أنت مشترك بهذه الباقة بالفعل!";
                     }
 
-                    // إضافة الباقة الجديدة
                     currentPurchased.push(id);
 
                     let inviterUid = data.referredByUid || data.parentId; 
@@ -462,7 +477,7 @@
                     transaction.update(userRef, {
                         balance: currentBal - price,
                         purchasedVips: currentPurchased,
-                        activeVipId: Math.max(...currentPurchased), // للحفاظ على توافقية عرض الباقة الأعلى
+                        activeVipId: Math.max(...currentPurchased), 
                         clicksDoneToday: 0,
                         isLockedFor24h: false,
                         lastCompletionTime: null
@@ -479,6 +494,7 @@
                             totalTeamRewards: inviterTeamRev + bonus,
                             teamRevenue: inviterTeamRev + bonus
                         });
+                        
                         const newTransRef = doc(collection(db, "transactions"));
                         transaction.set(newTransRef, {
                             userId: inviterUid,
@@ -555,7 +571,6 @@
                 card.className = `modern-vip-card vip${vip.id} ${isOwned ? 'active' : ''}`;
                 
                 let btnHtml = "";
-                
                 if (isOwned) {
                     btnHtml = '<span class="current-status-lbl" style="background: rgba(0, 255, 204, 0.2); color: #00ffcc;">✅ تم الاشتراك</span>';
                 } else if (vip.id === 0 && hasPaidVip) {
@@ -635,3 +650,4 @@
     </script>
 </body>
 </html>
+
