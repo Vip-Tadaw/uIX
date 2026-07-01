@@ -38,7 +38,7 @@
         .btn-withdraw { background-color: #2b3139; color: #fff; }
         .btn-details { background-color: #2b3139; color: #fff; }
 
-        /* إحصائيات الأرباح الدقيقة */
+        /* إحصائيات الأرباح */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 0 15px 20px; }
         .stat-box { background-color: #181a20; border: 1px solid #2b3139; border-radius: 12px; padding: 15px; text-align: center; }
         .stat-box .lbl { font-size: 11px; color: #848e9c; display: block; margin-bottom: 5px; }
@@ -54,19 +54,32 @@
         .menu-icon { width: 24px; text-align: center; font-size: 18px; color: #848e9c; }
         .menu-arrow { color: #848e9c; font-size: 14px; }
         
-        /* زر تسجيل الخروج */
         .logout-item { margin-top: 15px; background-color: #181a20; margin: 15px; border-radius: 16px; border: 1px solid #2b3139; }
         .logout-text { color: #f6465d !important; }
         .logout-icon { color: #f6465d !important; }
 
-        /* =========================================
-           نظام النوافذ المنبثقة (Modals)
-           ========================================= */
+        /* النوافذ المنبثقة المحدثة لتظهر من الأعلى */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 2000; display: none; opacity: 0; transition: 0.3s; }
         .modal-overlay.active { display: block; opacity: 1; }
         
-        .modal-content { position: fixed; bottom: -100%; left: 0; width: 100%; background: #181a20; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 25px 20px; z-index: 2001; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .modal-content.active { bottom: 0; }
+        .modal-content { 
+            position: fixed; 
+            top: -100%; /* يبدأ مخفي في الأعلى */
+            bottom: auto;
+            left: 0; 
+            width: 100%; 
+            background: #181a20; 
+            border-bottom-left-radius: 25px; /* انحناء الحواف من الأسفل */
+            border-bottom-right-radius: 25px; 
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+            padding: 25px 20px; 
+            z-index: 2010; 
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .modal-content.active { 
+            top: 0; /* ينزل ليستقر في أعلى الشاشة */
+        }
         
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 16px; font-weight: bold; border-bottom: 1px solid #2b3139; padding-bottom: 15px; }
         .modal-header i { font-size: 22px; color: #848e9c; cursor: pointer; }
@@ -79,27 +92,49 @@
         .submit-btn { width: 100%; background: #fcd535; color: #000; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .submit-btn:active { transform: scale(0.98); }
 
+        /* ستايل المنصة والشبكة (أبيض وموحد) */
+        .platform-network-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            background-color: #141517;
+            border: 1px solid #1e2329;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0 20px;
+            height: 35px;
+            direction: ltr; 
+        }
+        .binance-text {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 2;
+        }
+        .bnb-middle-box {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
+            border: none;
+            background-color: transparent;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
         /* التنبيهات */
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #02c076; color: #fff; padding: 12px 25px; border-radius: 20px; font-size: 13px; font-weight: bold; z-index: 3000; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .toast.error { background: #f6465d; }
         .toast.show { transform: translateX(-50%) translateY(0); }
-        /* ---------------- القائمة السفلية ---------------- */
-.bottom-nav { 
-    position: fixed; 
-    bottom: 0; 
-    left: 0; 
-    width: 100%; 
-    background-color: #000000; 
-    display: flex; 
-    justify-content: space-around; 
-    padding: 10px 0 15px; 
-    border-top: 1px solid #2b3139; 
-    z-index: 100; 
-    direction: ltr; /* هذا السطر هو الذي يعكس الترتيب من اليسار لليمين */
-}
-.nav-item { display: flex; flex-direction: column; align-items: center; color: #848e9c; font-size: 11px; gap: 6px; font-weight: bold; text-decoration: none; }
-.nav-item.active { color: #fcd535; }
-.nav-item i { font-size: 20px; }
+        
+        /* القائمة السفلية */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #000000; display: flex; justify-content: space-around; padding: 10px 0 15px; border-top: 1px solid #2b3139; z-index: 100; direction: ltr; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #848e9c; font-size: 11px; gap: 6px; font-weight: bold; text-decoration: none; }
+        .nav-item.active { color: #fcd535; }
+        .nav-item i { font-size: 20px; }
     </style>
 </head>
 <body>
@@ -160,26 +195,26 @@
 
     <div class="menu-list">
         
+        <div class="menu-item" onclick="openBindWalletModal()">
+            <div class="menu-right">
+                <i class="fa-solid fa-wallet menu-icon" style="color: #0ecb81;"></i>
+                <span>إدارة حساب السحب (ربط المحفظة)</span>
+            </div>
+            <i class="fa-solid fa-chevron-left menu-arrow"></i>
+        </div>
+
         <div class="menu-item" onclick="openModal('changeLoginPwdModal')">
             <div class="menu-right">
                 <i class="fa-solid fa-lock menu-icon"></i>
-                <span>تغيير كلمة المرور</span>
+                <span>تغيير كلمة مرور الدخول</span>
             </div>
             <i class="fa-solid fa-chevron-left menu-arrow"></i>
         </div>
 
-        <div class="menu-item" onclick="openModal('createSecPwdModal')">
+        <div class="menu-item" onclick="openChangeSecPwdModal()">
             <div class="menu-right">
-                <i class="fa-solid fa-key menu-icon" style="color: #fcd535;"></i>
-                <span>إنشاء كلمة مرور الأمان</span>
-            </div>
-            <i class="fa-solid fa-chevron-left menu-arrow"></i>
-        </div>
-
-        <div class="menu-item" onclick="openModal('changeSecPwdModal')">
-            <div class="menu-right">
-                <i class="fa-solid fa-shield-halved menu-icon"></i>
-                <span>تغيير كلمة مرور الأمان</span>
+                <i class="fa-solid fa-shield-halved menu-icon" style="color: #fcd535;"></i>
+                <span>تغيير كلمة مرور السحب</span>
             </div>
             <i class="fa-solid fa-chevron-left menu-arrow"></i>
         </div>
@@ -210,12 +245,42 @@
         </div>
     </div>
 
-
     <div class="modal-overlay" id="modalOverlay" onclick="closeAllModals()"></div>
+
+    <div class="modal-content" id="bindWalletModal">
+        <div class="modal-header" style="border-bottom: none; margin-bottom: 0;">
+            <span>ربط حساب السحب</span>
+            <i class="fa-solid fa-xmark" onclick="closeAllModals()"></i>
+        </div>
+        
+        <div class="platform-network-container">
+            <div class="binance-text">Binance</div>
+            <div class="bnb-middle-box">
+                BNB Smart Chain (BEP20)
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>عنوان المحفظة الخاص بك (USDT - BEP20)</label>
+            <input type="text" id="wallet-address" placeholder="أدخل عنوان المحفظة (يبدأ بـ 0x)">
+        </div>
+        
+        <div class="input-group" id="wallet-pwd-group">
+            <label id="wallet-pwd-label">إنشاء كلمة مرور للسحب</label>
+            <input type="password" id="wallet-sec-pwd" placeholder="أدخل كلمة مرور تتكون من 6 رموز عالأقل">
+        </div>
+
+        <div class="input-group" id="wallet-confirm-group">
+            <label>تأكيد كلمة مرور السحب</label>
+            <input type="password" id="wallet-sec-confirm" placeholder="أعد إدخال كلمة المرور">
+        </div>
+        
+        <button class="submit-btn" onclick="submitBindWallet()">تأكيد الحفظ</button>
+    </div>
 
     <div class="modal-content" id="changeLoginPwdModal">
         <div class="modal-header">
-            <span>تغيير كلمة المرور</span>
+            <span>تغيير كلمة مرور الدخول</span>
             <i class="fa-solid fa-xmark" onclick="closeAllModals()"></i>
         </div>
         <div class="input-group">
@@ -233,34 +298,17 @@
         <button class="submit-btn" onclick="submitChangeLoginPwd()">حفظ التغييرات</button>
     </div>
 
-    <div class="modal-content" id="createSecPwdModal">
-        <div class="modal-header">
-            <span>إنشاء كلمة مرور الأمان</span>
-            <i class="fa-solid fa-xmark" onclick="closeAllModals()"></i>
-        </div>
-        <div style="font-size: 11px; color: #848e9c; margin-bottom: 15px; text-align: center;">يتم استخدام هذه الكلمة لحماية أموالك عند السحب فقط.</div>
-        <div class="input-group">
-            <label>كلمة مرور الأمان الجديدة</label>
-            <input type="password" id="create-sec-pwd" placeholder="أدخل كلمة مرور الأمان">
-        </div>
-        <div class="input-group">
-            <label>تأكيد كلمة المرور</label>
-            <input type="password" id="create-sec-confirm" placeholder="أعد إدخال كلمة المرور">
-        </div>
-        <button class="submit-btn" onclick="submitCreateSecPwd()">إنشاء الكلمة</button>
-    </div>
-
     <div class="modal-content" id="changeSecPwdModal">
         <div class="modal-header">
-            <span>تغيير كلمة مرور الأمان</span>
+            <span>تغيير كلمة مرور السحب</span>
             <i class="fa-solid fa-xmark" onclick="closeAllModals()"></i>
         </div>
         <div class="input-group">
-            <label>كلمة مرور الأمان القديمة</label>
+            <label>كلمة مرور السحب الحالية</label>
             <input type="password" id="change-sec-old" placeholder="أدخل الكلمة الحالية">
         </div>
         <div class="input-group">
-            <label>كلمة مرور الأمان الجديدة</label>
+            <label>كلمة مرور السحب الجديدة</label>
             <input type="password" id="change-sec-new" placeholder="أدخل الكلمة الجديدة">
         </div>
         <div class="input-group">
@@ -271,31 +319,31 @@
     </div>
 
     <div class="toast" id="system-toast">تم بنجاح!</div>
+    
     <div class="bottom-nav">
-    <a href="home.html" class="nav-item">
-        <i class="fa-solid fa-house"></i>
-        <span data-ar="بيت" data-en="Home">بيت</span>
-    </a>
-    <a href="quantify.html" class="nav-item ">
-        <i class="fa-solid fa-bolt"></i>
-        <span data-ar="تحديد الكمية" data-en="Quantify">تحديد الكمية</span>
-    </a>
-    <a href="invite.html" class="nav-item">
-        <i class="fa-solid fa-share-from-square"></i>
-        <span data-ar="ادعو أصدقاء" data-en="Invite">ادعو أصدقاء</span>
-    </a>
-    <a href="ana.html" class="nav-item active">
-        <i class="fa-regular fa-user"></i>
-        <span data-ar="أنا" data-en="Me">أنا</span>
-    </a>
-</div>
+        <a href="home.html" class="nav-item">
+            <i class="fa-solid fa-house"></i>
+            <span data-ar="بيت" data-en="Home">بيت</span>
+        </a>
+        <a href="quantify.html" class="nav-item ">
+            <i class="fa-solid fa-bolt"></i>
+            <span data-ar="تحديد الكمية" data-en="Quantify">تحديد الكمية</span>
+        </a>
+        <a href="invite.html" class="nav-item">
+            <i class="fa-solid fa-share-from-square"></i>
+            <span data-ar="ادعو أصدقاء" data-en="Invite">ادعو أصدقاء</span>
+        </a>
+        <a href="ana.html" class="nav-item active">
+            <i class="fa-regular fa-user"></i>
+            <span data-ar="أنا" data-en="Me">أنا</span>
+        </a>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, updatePassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // إعدادات الفايربيز المحدثة والموحدة (V10)
         const firebaseConfig = {
             apiKey: "AIzaSyCa3nVSth5Jhhuhvblw23w0uxzR1VJHLOo",
             authDomain: "yaqoout-b4c83.firebaseapp.com",
@@ -309,42 +357,35 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let fullUID = ""; // متغير جديد يحفظ الـ ID الكامل للنسخ
+        let fullUID = ""; 
         let currentUID = "------";
         let actualBalance = "0.00";
         let isBalanceHidden = false;
-        let userDbSecPwd = null; // سيحفظ كلمة مرور الأمان من الفايربيس للتحقق منها
+        
+        let currentWalletAddress = null;
+        let userDbSecPwd = null;
 
-        // جلب البيانات الحقيقية والآمنة من الفايربيس بشكل لحظي
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // حفظ الـ ID الكامل بالخلفية لغرض النسخ
                 fullUID = user.uid; 
-                
-                // قص أول 8 أحرف فقط لعرضها بالشاشة حتى يبقى التصميم مرتب
                 currentUID = user.uid.substring(0, 8).toUpperCase();
                 document.getElementById('uid-text').innerText = currentUID;
-                
-                // تم تعديل السطر أدناه ليعمل بشكل صحيح (إضافة علامة || التي كانت مفقودة)
                 document.getElementById('user-phone-display').innerText = user.phoneNumber || user.email || "مستخدم Tadawulx";
 
-                // استماع حقيقي ومباشر يمنع أي تلاعب بالبيانات أو الأرباح
                 onSnapshot(doc(db, "users", user.uid), (docSnap) => {
                     if(docSnap.exists()) {
                         let data = docSnap.data();
                         
-                        // استخدام الحقل الموحد balance المرتبط بالإيداع والسحب والضغطة
                         actualBalance = (parseFloat(data.balance) || 0).toFixed(2);
                         if(!isBalanceHidden) document.getElementById('total-balance').innerText = actualBalance;
                         
-                        // عرض الإيرادات والأرباح الحقيقية بالكامل
                         document.getElementById('stat-total-rev').innerText = "$" + (parseFloat(data.totalRevenue) || 0).toFixed(2);
                         document.getElementById('stat-team-rev').innerText = "$" + (parseFloat(data.teamRevenue) || 0).toFixed(2);
                         document.getElementById('stat-today-rev').innerText = "$" + (parseFloat(data.todayRevenue) || 0).toFixed(2);
                         document.getElementById('stat-yesterday-rev').innerText = "$" + (parseFloat(data.yesterdayRevenue) || 0).toFixed(2);
                         document.getElementById('vip-level').innerText = `VIP ${data.activeVipId || 0}`;
 
-                        // جلب كلمة مرور الأمان ومزامنتها لكي يتعرف عليها كود السحب (withdraw.html)
+                        currentWalletAddress = data.walletAddress || null;
                         userDbSecPwd = data.withdrawPassword || null;
                     }
                 });
@@ -353,11 +394,8 @@
             }
         });
 
-        // جعل الدوال متاحة للـ HTML (onclick) في النظام الموديولر
         window.openModal = function(modalId) {
-            // تنظيف الحقول عند فتح النافذة
-            document.querySelectorAll('input[type="password"]').forEach(input => input.value = '');
-            
+            document.querySelectorAll('input[type="password"]').forEach(i => i.value = '');
             document.getElementById('modalOverlay').classList.add('active');
             document.getElementById(modalId).classList.add('active');
         };
@@ -367,7 +405,75 @@
             document.querySelectorAll('.modal-content').forEach(el => el.classList.remove('active'));
         };
 
-        // 1. تغيير كلمة مرور الدخول (محمية ومباشرة بالسيرفر)
+        window.openBindWalletModal = function() {
+            if(currentWalletAddress) document.getElementById('wallet-address').value = currentWalletAddress;
+
+            if(userDbSecPwd) {
+                document.getElementById('wallet-pwd-label').innerText = "كلمة مرور السحب الحالية (للتأكيد)";
+                document.getElementById('wallet-sec-pwd').placeholder = "أدخل كلمة مرور السحب للتحقق";
+                document.getElementById('wallet-confirm-group').style.display = 'none';
+            } else {
+                document.getElementById('wallet-pwd-label').innerText = "إنشاء كلمة مرور للسحب";
+                document.getElementById('wallet-sec-pwd').placeholder = "أدخل كلمة مرور تتكون من 6 رموز عالأقل";
+                document.getElementById('wallet-confirm-group').style.display = 'block';
+            }
+            openModal('bindWalletModal');
+        };
+
+        window.submitBindWallet = function() {
+            let address = document.getElementById('wallet-address').value.trim();
+            let pwd = document.getElementById('wallet-sec-pwd').value;
+            let confirm = document.getElementById('wallet-sec-confirm').value;
+
+            if(!address || !pwd) return showToast("يرجى ملء الحقول المطلوبة!", true);
+            if(address.length < 15) return showToast("عنوان المحفظة غير صالح!", true);
+
+            let updateData = {
+                walletAddress: address,
+                walletNetwork: "BNB Smart Chain (BEP20)"
+            };
+
+            if(userDbSecPwd) {
+                if(pwd !== userDbSecPwd) return showToast("كلمة مرور السحب غير صحيحة!", true);
+            } else {
+                if(pwd !== confirm) return showToast("كلمة المرور غير متطابقة!", true);
+                if(pwd.length < 6) return showToast("كلمة المرور يجب أن تكون 6 رموز على الأقل", true);
+                updateData.withdrawPassword = pwd;
+            }
+
+            updateDoc(doc(db, "users", auth.currentUser.uid), updateData).then(() => {
+                closeAllModals();
+                showToast("تم حفظ بيانات المحفظة بنجاح!");
+            }).catch(err => {
+                showToast("حدث خطأ في الاتصال، يرجى المحاولة لاحقاً", true);
+            });
+        };
+
+        window.openChangeSecPwdModal = function() {
+            if(!userDbSecPwd) {
+                return showToast("يرجى ربط المحفظة أولاً لإنشاء كلمة مرور للسحب!", true);
+            }
+            openModal('changeSecPwdModal');
+        };
+
+        window.submitChangeSecPwd = function() {
+            let oldPwd = document.getElementById('change-sec-old').value;
+            let newPwd = document.getElementById('change-sec-new').value;
+            let confirmPwd = document.getElementById('change-sec-confirm').value;
+
+            if(!oldPwd || !newPwd || !confirmPwd) return showToast("يرجى ملء جميع الحقول!", true);
+            if(oldPwd !== userDbSecPwd) return showToast("كلمة المرور الحالية غير صحيحة!", true);
+            if(newPwd !== confirmPwd) return showToast("كلمة المرور الجديدة غير متطابقة!", true);
+            if(newPwd.length < 6) return showToast("يجب أن تتكون من 6 أرقام/أحرف على الأقل", true);
+
+            updateDoc(doc(db, "users", auth.currentUser.uid), {
+                withdrawPassword: newPwd
+            }).then(() => {
+                closeAllModals();
+                showToast("تم تغيير كلمة مرور السحب بنجاح!");
+            }).catch(err => showToast("حدث خطأ في الاتصال", true));
+        };
+
         window.submitChangeLoginPwd = function() {
             let oldPwd = document.getElementById('login-old-pwd').value;
             let newPwd = document.getElementById('login-new-pwd').value;
@@ -384,62 +490,17 @@
                 if(error.code === 'auth/requires-recent-login') {
                     showToast("يرجى تسجيل الخروج والدخول مجدداً لأسباب أمنية", true);
                 } else {
-                    showToast("حدث خطأ أثناء تغيير كلمة المرور، يرجى إعادة المحاولة", true);
+                    showToast("حدث خطأ، يرجى إعادة المحاولة", true);
                 }
             });
         };
 
-        // 2. إنشاء كلمة مرور الأمان لأول مرة (تُحفظ في السيرفر ليقرأها كود السحب)
-        window.submitCreateSecPwd = function() {
-            let newPwd = document.getElementById('create-sec-pwd').value;
-            let confirmPwd = document.getElementById('create-sec-confirm').value;
-
-            if(userDbSecPwd) return showToast("لديك كلمة مرور أمان مسبقاً، يرجى اختيار التغيير.", true);
-            if(!newPwd || !confirmPwd) return showToast("يرجى ملء جميع الحقول!", true);
-            if(newPwd !== confirmPwd) return showToast("كلمتا المرور غير متطابقتين!", true);
-            if(newPwd.length < 6) return showToast("يجب أن تتكون من 6 أرقام/أحرف على الأقل", true);
-
-            updateDoc(doc(db, "users", auth.currentUser.uid), {
-                withdrawPassword: newPwd
-            }).then(() => {
-                closeAllModals();
-                showToast("تم إنشاء كلمة مرور الأمان بنجاح!");
-            }).catch(err => showToast("حدث خطأ في الاتصال بقاعدة البيانات", true));
-        };
-
-        // 3. تغيير كلمة مرور الأمان القديمة
-        window.submitChangeSecPwd = function() {
-            let oldPwd = document.getElementById('change-sec-old').value;
-            let newPwd = document.getElementById('change-sec-new').value;
-            let confirmPwd = document.getElementById('change-sec-confirm').value;
-
-            if(!userDbSecPwd) return showToast("لم تقم بإنشاء كلمة مرور أمان بعد!", true);
-            if(!oldPwd || !newPwd || !confirmPwd) return showToast("يرجى ملء جميع الحقول!", true);
-            if(oldPwd !== userDbSecPwd) return showToast("كلمة المرور القديمة غير صحيحة!", true);
-            if(newPwd !== confirmPwd) return showToast("كلمة المرور الجديدة غير متطابقة!", true);
-            if(newPwd.length < 6) return showToast("يجب أن تتكون من 6 أرقام/أحرف على الأقل", true);
-
-            updateDoc(doc(db, "users", auth.currentUser.uid), {
-                withdrawPassword: newPwd
-            }).then(() => {
-                closeAllModals();
-                showToast("تم تغيير كلمة مرور الأمان بنجاح!");
-            }).catch(err => showToast("حدث خطأ في الاتصال بقاعدة البيانات", true));
-        };
-
-        // نسخ الـ ID الكامل المخفي بالخلفية
         window.copyUID = function() {
-            if (!fullUID) return; // تم التغيير للتحقق من الـ ID الكامل
-            
-            // ننسخ الـ fullUID بدل currentUID
-            navigator.clipboard.writeText(fullUID).then(() => showToast("تم نسخ الـ ID بالكامل بنجاح!")).catch(err => {
+            if (!fullUID) return; 
+            navigator.clipboard.writeText(fullUID).then(() => showToast("تم نسخ الـ ID بنجاح!")).catch(err => {
                 let ta = document.createElement("textarea"); 
-                ta.value = fullUID; 
-                document.body.appendChild(ta); 
-                ta.select(); 
-                document.execCommand('copy'); 
-                document.body.removeChild(ta); 
-                showToast("تم نسخ الـ ID بالكامل بنجاح!");
+                ta.value = fullUID; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); 
+                showToast("تم نسخ الـ ID بنجاح!");
             });
         };
 
@@ -451,17 +512,17 @@
         };
 
         window.performLogout = function() { 
-            signOut(auth).then(() => window.location.href = 'index.html').catch(() => showToast("خطأ في تسجيل الخروج", true)); 
+            signOut(auth).then(() => window.location.href = 'index.html').catch(() => showToast("خطأ في الخروج", true)); 
         };
         
         window.showToast = function(message, isError = false) {
             let toast = document.getElementById('system-toast');
             toast.innerText = message; 
-            toast.className = `toast ${isError ? 'error' : ''}`; // تم إصلاح علامات التنصيص هنا أيضاً
+            toast.className = `toast ${isError ? 'error' : ''}`;
             toast.classList.add('show'); 
             setTimeout(() => toast.classList.remove('show'), 2500);
         };
-</script>
+    </script>
 </body>
 </html>
 
