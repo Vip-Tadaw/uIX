@@ -318,10 +318,10 @@
         </a>
     </div>
 
-    <div id="marqueeContainer" class="marquee-container" style="display: none;">
-        <i class="fa-regular fa-bell"></i>
-        <marquee id="marqueeText" direction="right" scrollamount="5" style="margin-right: 10px; color: #b7bdc6; font-size: 13px; font-weight: bold; width: 100%;"></marquee>
-    </div>
+   <div id="marqueeContainer" class="marquee-container" style="display: flex;">
+    <i class="fa-regular fa-bell"></i>
+    <marquee id="marqueeText" direction="right" scrollamount="4" style="margin-right: 10px; color: #b7bdc6; font-size: 13px; font-weight: bold; width: 100%; padding-top: 3px;"></marquee>
+</div>
 
     <div class="top-crypto">
         <div class="t-card">
@@ -637,14 +637,18 @@
                 const data = docSnap.data();
                 
                 // التحكم بالشريط الإعلاني
-                const mContainer = document.getElementById("marqueeContainer");
-                const mText = document.getElementById("marqueeText");
-                if (data.marqueeText && data.marqueeText.trim() !== "") {
-                    mContainer.style.display = "flex"; 
-                    mText.innerText = data.marqueeText;
-                } else {
-                    mContainer.style.display = "none";
-                }
+const mText = document.getElementById("marqueeText");
+const mContainer = document.getElementById("marqueeContainer");
+
+// الصندوق يبقى ظاهر دائماً ولا يختفي
+mContainer.style.display = "flex"; 
+
+if (data.marqueeText && data.marqueeText.trim() !== "") {
+    mText.innerText = data.marqueeText;
+} else {
+    // إذا حذفت الإعلان من لوحة التحكم، يبقى الصندوق فارغ بس ما يختفي
+    mText.innerText = " "; 
+}
 
                 // التحكم بوضع الصيانة (قفل التطبيق)
                 if (data.maintenanceMode === true) {
