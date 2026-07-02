@@ -318,9 +318,29 @@
         </a>
     </div>
 
-   <div id="marqueeContainer" class="marquee-container" style="display: flex;">
+   <style>
+    .modern-ticker {
+        display: inline-block;
+        white-space: nowrap;
+        color: #b7bdc6;
+        font-size: 13px;
+        font-weight: bold;
+        /* السرعة 25 ثانية: كبر الرقم إذا تريده أبطأ، وزغره إذا تريده أسرع */
+        animation: tickerMove 25s linear infinite; 
+    }
+
+    /* حركة ذكية من اليسار لليمين تناسب العربي وما تقص ولا حرف */
+    @keyframes tickerMove {
+        0% { transform: translateX(-100%); } /* يبدأ من خارج الشاشة يساراً */
+        100% { transform: translateX(100vw); } /* ينتهي خارج الشاشة يميناً */
+    }
+</style>
+
+<div id="marqueeContainer" class="marquee-container" style="display: flex;">
     <i class="fa-regular fa-bell"></i>
-    <marquee id="marqueeText" direction="right" scrollamount="4" style="margin-right: 10px; color: #b7bdc6; font-size: 13px; font-weight: bold; width: 100%; padding-top: 3px;"></marquee>
+    <div style="flex: 1; overflow: hidden; margin-right: 10px; display: flex; align-items: center; position: relative; height: 20px;">
+        <span id="marqueeText" class="modern-ticker"></span>
+    </div>
 </div>
 
     <div class="top-crypto">
